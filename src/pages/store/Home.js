@@ -5,8 +5,7 @@ export const Home = {
   selectedCategoryId: null,
   allProducts: [],
 
-  async render() {
-    // 1. Busca produtos, categorias e as configurações da loja em paralelo
+ async render() {
     const [productsRes, categoriesRes, tenantRes] = await Promise.all([
       supabase.from('products').select('*').eq('in_stock', true).order('created_at', { ascending: false }),
       supabase.from('categories').select('*').order('name', { ascending: true }),
@@ -17,38 +16,35 @@ export const Home = {
     const categories = categoriesRes.data || [];
     const tenantSettings = tenantRes.data || {};
 
-    // 2. Fallbacks seguros caso o administrador não tenha preenchido os campos ainda
     const storeName = tenantSettings.store_name || 'Nossa Vitrine';
     const heroTitle = tenantSettings.hero_title || 'Bem-vindo à nossa Vitrine';
     const heroSubtitle = tenantSettings.hero_subtitle || 'Navegue pelas nossas categorias, monte seu carrinho e finalize seu pedido diretamente pelo WhatsApp de forma rápida e prática.';
-    // Exemplo de como usar no seu componente de Home
+    
+    // A melhoria da imagem Hero de forma segura:
     const heroStyle = tenantSettings.hero_image_url
-      ? `background-image: url('${tenantSettings.hero_image_url}'); background-size: cover; background-position: center;`
-      : 'background-color: #333;';
+      ? `style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('${tenantSettings.hero_image_url}'); background-size: cover; background-position: center;"`
+      : 'style="background: linear-gradient(to right, #3b82f6, #6366f1);"'; // Fallback se não houver imagem
 
-    // Aplique na sua tag da Hero:
-    // <section style="${heroStyle}" class="relative h-[400px] ...">
-    // Dados para o Footer
     const storePhone = tenantSettings.whatsapp_number || 'Não informado';
     const storeAddress = tenantSettings.address || 'Atendimento Online / Retirada a Combinar';
 
     const formatCurrency = (value) =>
       new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-
     return `
       <!-- O CABEÇALHO ANTIGO FOI REMOVIDO DAQUI PARA ACABAR COM O BUG DA DUPLICIDADE -->
 
-      <!-- BANNER HERO (AGORA É O TOPO REAL DA PÁGINA HOME) -->
-      <section class="bg-gradient-to-r from-primary to-secondary text-white py-16 px-4 text-center">
-        <div class="max-w-4xl mx-auto space-y-4">
-          <h2 class="text-4xl md:text-5xl font-black tracking-tight uppercase leading-tight">
-            ${heroTitle}
-          </h2>
-          <p class="text-base md:text-lg opacity-90 max-w-2xl mx-auto font-medium">
-            ${heroSubtitle}
-          </p>
-        </div>
-      </section>
+     <section class="w-full h-[400px] flex items-center justify-center text-center px-4" ${heroStyle}>
+  <div class="max-w-4xl mx-auto space-y-4 px-4">
+    <h2 class="text-4xl md:text-6xl font-black tracking-tight text-white uppercase drop-shadow-lg leading-tight">
+      ${heroTitle}
+    </h2>
+    
+    <p class="text-lg md:text-xl text-white font-medium max-w-xl mx-auto drop-shadow-md leading-relaxed">
+      ${heroSubtitle}
+    </p>
+  </div>
+</section>
+      
 
       <main class="max-w-6xl mx-auto px-4 py-8 space-y-8">
         
