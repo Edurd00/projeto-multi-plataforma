@@ -63,15 +63,15 @@ export const Home = {
               Todos os Itens
             </button>
             ${categories.map(cat => {
-      const isActive = this.selectedCategoryId === cat.id;
-      return `
+              const isActive = this.selectedCategoryId === cat.id;
+              return `
                 <button 
                   data-category-id="${cat.id}" 
                   class="js-category-btn px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap shadow-sm border ${isActive ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-100 hover:bg-gray-50'}"
                 >
                   ${cat.name}
-                </button>
-              `;
+            </button>`;
+
     }).join('')}
           </div>
         </section>
@@ -151,11 +151,26 @@ export const Home = {
   },
   // 1. ADICIONE ESSA FUNÇÃO AQUI (O MODAL)
   openOptionModal(prod) {
+    // Adiciona a lógica de cores aqui
+    const colorsHTML = prod.colors && prod.colors.length > 0 
+      ? `<div class="mt-4">
+           <p class="text-xs font-bold text-gray-400 uppercase mb-2">Selecione a cor:</p>
+           <div class="flex flex-wrap gap-2">
+             ${prod.colors.map(color => `
+               <button class="color-btn border-2 border-gray-200 px-3 py-1 rounded-lg text-sm font-bold hover:border-primary transition" data-color="${color}">
+                 ${color}
+               </button>
+             `).join('')}
+           </div>
+         </div>` 
+      : '';
+
     const modalHTML = `
       <div id="option-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white p-6 rounded-2xl w-full max-w-sm shadow-xl space-y-4">
-          <h3 class="font-bold text-gray-800 text-lg">Selecione o tamanho:</h3>
+          <h3 class="font-bold text-gray-800 text-lg">Selecione as opções:</h3>
           <p class="text-sm text-gray-600">${prod.title}</p>
+          
           <div class="flex flex-wrap gap-2">
             ${prod.attributes.map(attr => `
               <button class="size-btn border-2 border-primary text-primary px-4 py-2 rounded-lg font-bold hover:bg-primary hover:text-white transition">
@@ -163,6 +178,10 @@ export const Home = {
               </button>
             `).join('')}
           </div>
+          
+          ${colorsHTML}
+          
+          <button id="confirm-modal" class="w-full bg-primary text-white font-bold py-2 rounded-xl mt-4">Confirmar</button>
           <button id="close-modal" class="text-gray-400 text-sm underline w-full pt-2">Cancelar</button>
         </div>
       </div>
@@ -170,16 +189,34 @@ export const Home = {
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
+    let selectedSize = null;
+    let selectedColor = null;
+
+    // Seleção de tamanho
     document.querySelectorAll('.size-btn').forEach(btn => {
       btn.onclick = () => {
-        const selectedSize = btn.innerText;
-        // Dispara o evento com o tamanho escolhido
-        window.dispatchEvent(new CustomEvent('global:add-to-cart', {
-          detail: { id: prod.id, size: selectedSize }
-        }));
-        document.getElementById('option-modal').remove();
+        document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('bg-primary', 'text-white'));
+        btn.classList.add('bg-primary', 'text-white');
+        selectedSize = btn.innerText;
       };
     });
+
+    // Seleção de cor
+    document.querySelectorAll('.color-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('border-primary', 'text-primary'));
+        btn.classList.add('border-primary', 'text-primary');
+        selectedColor = btn.getAttribute('data-color');
+      };
+    });
+
+    document.getElementById('confirm-modal').onclick = () => {
+      if(!selectedSize) return alert("Selecione um tamanho!");
+      window.dispatchEvent(new CustomEvent('global:add-to-cart', {
+        detail: { id: prod.id, size: selectedSize, color: selectedColor || 'N/A' }
+      }));
+      document.getElementById('option-modal').remove();
+    };
 
     document.getElementById('close-modal').onclick = () => document.getElementById('option-modal').remove();
   },

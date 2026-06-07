@@ -82,12 +82,17 @@ export const orderService = {
           ? productData.promo_price
           : productData.price;
 
-        // Verifica se existem atributos (como o tamanho)
+        // Lógica aprimorada para exibir Tamanho e Cor de forma clara
         let attrsText = "";
         if (item.selectedAttributes && Object.keys(item.selectedAttributes).length > 0) {
           attrsText = Object.entries(item.selectedAttributes)
-            .map(([k, v]) => `(${v})`)
-            .join(' ');
+            .map(([key, value]) => {
+               // Formata a chave para ficar bonita (ex: 'size' vira 'Tam', 'color' vira 'Cor')
+               const label = key === 'size' ? 'Tam' : (key === 'color' ? 'Cor' : key);
+               return `${label}: ${value}`;
+            })
+            .join(' | ');
+          attrsText = `(${attrsText})`;
         }
 
         text += `• ${item.quantity}x ${productData.title} ${attrsText} - ${formatCurrency(unitPrice * item.quantity)}\n`;

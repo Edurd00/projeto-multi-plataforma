@@ -119,24 +119,21 @@ async function mountApp() {
   Home.bindEvents(homeContainer);
 
   window.addEventListener('global:add-to-cart', async (e) => {
-    // Recebe o ID e o SIZE (tamanho) que enviamos do modal
-    const { id, size, button } = e.detail;
+  // Agora desestruturamos o ID, SIZE e COLOR que vêm do Home.js
+  const { id, size, color } = e.detail;
 
-    const { data: product } = await supabase.from('products').select('*').eq('id', id).single();
+  const { data: product } = await supabase.from('products').select('*').eq('id', id).single();
 
-    if (product) {
-      // Passamos o size dentro do objeto de atributos
-      const attributes = size ? { size: size } : {};
-      appContext.addToCart(product, 1, attributes);
-
-      CartDrawer.open();
-    }
-
-    if (button) {
-      button.innerHTML = `Adicionar`; // ou o seu ícone
-      button.disabled = false;
-    }
-  });
+  if (product) {
+    // Montamos um objeto com as opções selecionadas (se existirem)
+    const options = {};
+    if (size && size !== 'N/A') options.size = size;
+    if (color && color !== 'N/A') options.color = color;
+    
+    appContext.addToCart(product, 1, options);
+    CartDrawer.open();
+  }
+});
   
   document.getElementById('floating-cart-trigger').onclick = () => CartDrawer.open();
   appContext.subscribe(() => updateUI());

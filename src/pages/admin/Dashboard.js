@@ -139,7 +139,8 @@ export const Dashboard = {
                   
                   <input type="text" id="prod-attributes" class="w-full border rounded-lg p-2 text-sm" placeholder="Tamanhos ou Variações (ex: P, M, G, GG)" />
                   <p class="text-[10px] text-gray-400">Separe os tamanhos por vírgula.</p>
-
+                  <input type="text" id="prod-colors" class="w-full border rounded-lg p-2 text-sm" placeholder="Cores (ex: Preto, Branco, Azul)" />
+                  <p class="text-[10px] text-gray-400">Separe as cores por vírgula.</p>
                   <div class="grid grid-cols-2 gap-2">
                     <input type="number" step="0.01" id="prod-price" required class="w-full border rounded-lg p-2 text-sm" placeholder="Preço" />
                     <input type="number" step="0.01" id="prod-promo" class="w-full border rounded-lg p-2 text-sm" placeholder="Promoção" />
@@ -354,6 +355,8 @@ export const Dashboard = {
         const attributesRaw = container.querySelector('#prod-attributes').value;
         // Transforma "P, M, G" em um array ["P", "M", "G"]
         const attributesArray = attributesRaw ? attributesRaw.split(',').map(item => item.trim()) : [];
+        const colorsRaw = container.querySelector('#prod-colors').value;
+        const colorsArray = colorsRaw ? colorsRaw.split(',').map(item => item.trim()) : [];
 
         const { error } = await supabase.from('products').insert({
           title: container.querySelector('#prod-title').value,
@@ -363,7 +366,8 @@ export const Dashboard = {
           image_url: container.querySelector('#prod-image').value,
           shipping_fee: parseFloat(container.querySelector('#prod-shipping').value) || 0,
           description: description,        // Novo campo
-          attributes: attributesArray     // Novo campo (JSON/Array no Supabase)
+          attributes: attributesArray,     // Novo campo (JSON/Array no Supabase)
+          colors: colorsArray // <-- Adicione esta linha
         });
 
         if (!error) {
