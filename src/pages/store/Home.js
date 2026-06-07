@@ -21,7 +21,13 @@ export const Home = {
     const storeName = tenantSettings.store_name || 'Nossa Vitrine';
     const heroTitle = tenantSettings.hero_title || 'Bem-vindo à nossa Vitrine';
     const heroSubtitle = tenantSettings.hero_subtitle || 'Navegue pelas nossas categorias, monte seu carrinho e finalize seu pedido diretamente pelo WhatsApp de forma rápida e prática.';
+    // Exemplo de como usar no seu componente de Home
+    const heroStyle = tenantSettings.hero_image_url
+      ? `background-image: url('${tenantSettings.hero_image_url}'); background-size: cover; background-position: center;`
+      : 'background-color: #333;';
 
+    // Aplique na sua tag da Hero:
+    // <section style="${heroStyle}" class="relative h-[400px] ...">
     // Dados para o Footer
     const storePhone = tenantSettings.whatsapp_number || 'Não informado';
     const storeAddress = tenantSettings.address || 'Atendimento Online / Retirada a Combinar';
@@ -143,6 +149,59 @@ export const Home = {
       </footer>
     `;
   },
+  // 1. ADICIONE ESSA FUNÇÃO AQUI (O MODAL)
+  openOptionModal(prod) {
+    const modalHTML = `
+      <div id="option-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-sm shadow-xl space-y-4">
+          <h3 class="font-bold text-gray-800 text-lg">Selecione o tamanho:</h3>
+          <p class="text-sm text-gray-600">${prod.title}</p>
+          <div class="flex flex-wrap gap-2">
+            ${prod.attributes.map(attr => `
+              <button class="size-btn border-2 border-primary text-primary px-4 py-2 rounded-lg font-bold hover:bg-primary hover:text-white transition">
+                ${attr}
+              </button>
+            `).join('')}
+          </div>
+          <button id="close-modal" class="text-gray-400 text-sm underline w-full pt-2">Cancelar</button>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    document.querySelectorAll('.size-btn').forEach(btn => {
+      btn.onclick = () => {
+        const selectedSize = btn.innerText;
+        // Dispara o evento com o tamanho escolhido
+        window.dispatchEvent(new CustomEvent('global:add-to-cart', {
+          detail: { id: prod.id, size: selectedSize }
+        }));
+        document.getElementById('option-modal').remove();
+      };
+    });
+
+    document.getElementById('close-modal').onclick = () => document.getElementById('option-modal').remove();
+  },
+
+  // 2. ATUALIZE O SEU BINDATTCARTBUTTONS COM ESTA LÓGICA
+  bindAddToCartButtons(targetContainer) {
+    targetContainer.querySelectorAll('.js-add-to-cart').forEach(btn => {
+      btn.onclick = (e) => {
+        e.preventDefault();
+        const id = btn.getAttribute('data-id');
+        const prod = this.allProducts.find(p => p.id === id);
+
+        // Verifica se o produto tem atributos (tamanhos)
+        if (prod && prod.attributes && prod.attributes.length > 0) {
+          this.openOptionModal(prod);
+        } else {
+          // Se não tiver, adiciona direto
+          window.dispatchEvent(new CustomEvent('global:add-to-cart', { detail: { id } }));
+        }
+      };
+    });
+  },
 
   // Redesenha estritamente o grid de cards sem remontar a estrutura da página
   renderProductsHTML(products, formatCurrency) {
@@ -160,16 +219,28 @@ export const Home = {
 
     return filtered.map(prod => {
       const hasPromo = prod.promo_price && prod.promo_price < prod.price;
+
+      // Lógica para tratar os tamanhos (JSON no banco)
+      const attributes = Array.isArray(prod.attributes) ? prod.attributes : [];
+
       return `
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col justify-between group hover:shadow-md transition">
           <div class="relative overflow-hidden aspect-square bg-gray-50">
             <img src="${prod.image_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" alt="${prod.title}" />
-            ${hasPromo ? `<span class="absolute top-2 left-2 bg-red-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">Promoção</span>` : ''}
+            ${hasPromo ? `<span class="absolute top-2 left-2 bg-red-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full uppercase shadow-sm">Promoção</span>` : ''}
           </div>
           
           <div class="p-3 flex-grow flex flex-col justify-between space-y-2">
             <div>
-              <h4 class="text-sm font-bold text-gray-800 line-clamp-2 min-h-[40px] leading-tight">${prod.title}</h4>
+              <h4 class="text-sm font-bold text-gray-800 leading-tight">${prod.title}</h4>
+              
+              ${prod.description ? `<p class="text-[11px] text-gray-500 mt-1 line-clamp-2">${prod.description}</p>` : ''}
+              
+              ${attributes.length > 0 ? `
+                <div class="mt-2 flex flex-wrap gap-1">
+                  ${attributes.map(attr => `<span class="text-[9px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 font-bold uppercase">${attr}</span>`).join('')}
+                </div>
+              ` : ''}
             </div>
             
             <div class="space-y-2">
@@ -182,13 +253,7 @@ export const Home = {
                 `}
               </div>
               
-              <button 
-                data-id="${prod.id}" 
-                class="js-add-to-cart w-full bg-primary text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition hover:bg-opacity-95 shadow-sm"
-              >
-                <svg xmlns="http://www.w3.org/2000/xl" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
+              <button data-id="${prod.id}" class="js-add-to-cart w-full bg-primary text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition hover:bg-opacity-95 shadow-sm">
                 Adicionar
               </button>
             </div>
@@ -224,18 +289,23 @@ export const Home = {
     this.bindAddToCartButtons(container);
   },
 
+  // Dentro do seu Home.js, na função bindAddToCartButtons
   bindAddToCartButtons(targetContainer) {
     targetContainer.querySelectorAll('.js-add-to-cart').forEach(btn => {
       btn.onclick = (e) => {
         e.preventDefault();
         const id = btn.getAttribute('data-id');
+        const prod = this.allProducts.find(p => p.id === id);
 
-        btn.innerText = "Adicionando...";
-        btn.disabled = true;
-
-        const event = new CustomEvent('global:add-to-cart', { detail: { id, button: btn } });
-        window.dispatchEvent(event);
+        // Se tiver atributos (tamanhos), abre o modal de escolha
+        if (prod.attributes && prod.attributes.length > 0) {
+          this.openOptionModal(prod);
+        } else {
+          // Se não tiver, adiciona direto
+          window.dispatchEvent(new CustomEvent('global:add-to-cart', { detail: { id } }));
+        }
       };
     });
   }
+
 };

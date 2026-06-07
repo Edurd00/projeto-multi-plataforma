@@ -2,29 +2,34 @@ import { appContext } from '../../context/AppContext.js';
 
 export const CheckoutModal = {
   render() {
-    // 1. Recupera os itens do carrinho direto do estado global
-    const cartItems = appContext.getState().cart;
+    const cartItems = appContext.getState().cart || [];
 
-    // 2. Lógica Dinâmica: Encontra o maior frete presente entre os itens do carrinho
+    // Função de formatação para garantir R$ e casas decimais
+    const formatCurrency = (value) => 
+      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
+    // 1. Cálculo do frete (pega o maior valor entre os itens)
     const deliveryFee = cartItems.reduce((max, item) => {
-      const itemShipping = parseFloat(item.shipping_fee) || 0;
+      const itemShipping = parseFloat(item.product?.shipping_fee || 0);
       return itemShipping > max ? itemShipping : max;
     }, 0);
 
-    // 3. Calcula o subtotal dos produtos comprados
+    // 2. Cálculo do subtotal (buscando dentro de item.product)
     const totalCartAmount = cartItems.reduce((sum, item) => {
-      const price = item.promo_price || item.price;
-      return sum + (price * item.quantity);
+      const prod = item.product || {};
+      // Verifica se tem preço promocional válido
+      const price = (prod.promo_price && prod.promo_price < prod.price) 
+        ? Number(prod.promo_price) 
+        : Number(prod.price || 0);
+      
+      const quantity = Number(item.quantity) || 1;
+      return sum + (price * quantity);
     }, 0);
 
-    // 4. Soma o subtotal com o maior frete encontrado
+    // 3. Soma final
     const totalWithDelivery = totalCartAmount + deliveryFee;
 
-    // Conversores de moeda para formatar a exibição em Real (R$)
-    const formatCurrency = (value) =>
-      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-
-    // Define o texto inteligente que o cliente lerá sobre a entrega
+    // 4. Texto da entrega
     const deliveryText = deliveryFee > 0 
       ? formatCurrency(deliveryFee)
       : `<span class="text-green-600 font-extrabold">A combinar / Grátis 💬</span>`;
@@ -65,7 +70,7 @@ export const CheckoutModal = {
             </div>
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Endereço de Entrega *</label>
-              <textarea id="form-address" required class="w-full border border-gray-200 rounded-lg p-2.5 text-sm h-16 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Rua, número, bairro e complemento (ou Digite 'Retirada')"></textarea>
+              <textarea id="form-address" required class="w-full border border-gray-200 rounded-lg p-2.5 text-sm h-16 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Rua, número, bairro"></textarea>
             </div>
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Forma de Pagamento *</label>
@@ -75,11 +80,7 @@ export const CheckoutModal = {
                 <option value="Dinheiro">Dinheiro</option>
               </select>
             </div>
-            
-            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition text-sm shadow-sm mt-4 flex items-center justify-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
+            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition text-sm shadow-sm mt-4">
               Confirmar e Enviar para WhatsApp
             </button>
           </form>
@@ -87,13 +88,12 @@ export const CheckoutModal = {
       </div>
     `;
   },
-
+  
+  // Mantenha os métodos open, close e bindEvents exatamente como você já tinha antes
   open() { 
-    // Como o carrinho muda, precisamos remontar o HTML interno do container antes de exibir o modal
     const container = document.getElementById('checkout-modal-container');
     if (container) {
       container.innerHTML = this.render();
-      // Remonta os listeners de clique/submit para o novo HTML injetado
       this.bindEvents(container, window.currentCheckoutCallback || (() => {}));
     }
     document.getElementById('checkout-modal')?.classList.remove('hidden'); 
@@ -104,12 +104,8 @@ export const CheckoutModal = {
   bindEvents(container, onComplete) {
     const closeBtn = container.querySelector('#close-checkout');
     const form = container.querySelector('#checkout-form');
-
-    // Armazena o callback globalmente para que a re-abertura dinâmica do método open() não o perca
     window.currentCheckoutCallback = onComplete;
-
     if (closeBtn) closeBtn.onclick = () => this.close();
-
     if (form) {
       form.onsubmit = (e) => {
         e.preventDefault();

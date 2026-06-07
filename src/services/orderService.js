@@ -6,7 +6,7 @@ export const orderService = {
    */
   async createOrder({ customerName, customerPhone, deliveryAddress, paymentMethod, cartItems, tenant }) {
     try {
-      const formatCurrency = (value) => 
+      const formatCurrency = (value) =>
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
       // 1. LÓGICA DINÂMICA: Varre o carrinho e encontra o MAIOR frete cadastrado entre os itens
@@ -20,8 +20,8 @@ export const orderService = {
       // 2. Calcula o subtotal dos produtos considerando preços promocionais ativos
       const subtotal = cartItems.reduce((sum, item) => {
         const productData = item.product || item; // Garante o mapeamento correto do objeto
-        const price = productData.promo_price && productData.promo_price < productData.price 
-          ? productData.promo_price 
+        const price = productData.promo_price && productData.promo_price < productData.price
+          ? productData.promo_price
           : productData.price;
         return sum + (price * item.quantity);
       }, 0);
@@ -48,10 +48,10 @@ export const orderService = {
       // 4. Prepara o lote de inserção (Bulk Insert) na tabela 'order_items'
       const itemsToInsert = cartItems.map(item => {
         const productData = item.product || item;
-        const unitPrice = productData.promo_price && productData.promo_price < productData.price 
-          ? productData.promo_price 
+        const unitPrice = productData.promo_price && productData.promo_price < productData.price
+          ? productData.promo_price
           : productData.price;
-          
+
         return {
           order_id: order.id,
           product_id: productData.id,
@@ -78,26 +78,31 @@ export const orderService = {
 
       cartItems.forEach(item => {
         const productData = item.product || item;
-        const unitPrice = productData.promo_price && productData.promo_price < productData.price 
-          ? productData.promo_price 
+        const unitPrice = productData.promo_price && productData.promo_price < productData.price
+          ? productData.promo_price
           : productData.price;
-          
-        const selectedAttributes = item.selectedAttributes || {};
-        const attrsText = Object.entries(selectedAttributes).map(([k,v]) => `(${v})`).join(' ');
-        
-        text += `• ${item.quantity}x ${productData.title} ${attrsText}- ${formatCurrency(unitPrice * item.quantity)}\n`;
+
+        // Verifica se existem atributos (como o tamanho)
+        let attrsText = "";
+        if (item.selectedAttributes && Object.keys(item.selectedAttributes).length > 0) {
+          attrsText = Object.entries(item.selectedAttributes)
+            .map(([k, v]) => `(${v})`)
+            .join(' ');
+        }
+
+        text += `• ${item.quantity}x ${productData.title} ${attrsText} - ${formatCurrency(unitPrice * item.quantity)}\n`;
       });
 
       // Configuração inteligente do texto do frete no comprovante do lojista
-      const deliveryText = deliveryFee > 0 
-        ? formatCurrency(deliveryFee) 
+      const deliveryText = deliveryFee > 0
+        ? formatCurrency(deliveryFee)
         : 'A combinar / Grátis via Chat 💬';
 
       text += `----------------------------------\n`;
       text += `*Subtotal:* ${formatCurrency(subtotal)}\n`;
       text += `*Taxa de Entrega:* ${deliveryText}\n`;
       text += `*TOTAL:* ${formatCurrency(totalAmount)}\n\n`;
-      text += `_Pedido registrado automaticamente sob ID: ${order.id.slice(0,8).toUpperCase()}_`;
+      text += `_Pedido registrado automaticamente sob ID: ${order.id.slice(0, 8).toUpperCase()}_`;
 
       // 6. REDIRECIONAMENTO VIA ENCODING URL SEGURO
       const whatsappUrl = `https://api.whatsapp.com/send?phone=${tenant.whatsapp_number}&text=${encodeURIComponent(text)}`;

@@ -11,7 +11,7 @@ import { supabase } from './config/supabase.js';
 // Função arquitetural para trocar o favicon do navegador dinamicamente
 function updateFavicon(url) {
   if (!url) return;
-  
+
   // Remove favicons existentes para evitar conflitos
   const existingFavicons = document.querySelectorAll("link[rel*='icon']");
   existingFavicons.forEach(el => el.parentNode.removeChild(el));
@@ -21,20 +21,20 @@ function updateFavicon(url) {
   link.type = 'image/x-icon';
   link.rel = 'shortcut icon';
   link.href = url;
-  
+
   // Injeta no <head> do documento
   document.getElementsByTagName('head')[0].appendChild(link);
 }
 
 async function mountApp() {
   await appContext.initTenant();
-  
+
   const appDiv = document.getElementById('app');
   if (!appDiv) return;
 
   // Recupera as configurações do tenant atualizado
   const tenantData = appContext.getState().tenant;
-  
+
   // Executa a alteração automática do Favicon baseado nos dados do Banco
   if (tenantData?.logo_url) {
     updateFavicon(tenantData.logo_url);
@@ -74,10 +74,10 @@ async function mountApp() {
 
   // ROTA: VITRINE DO CLIENTE (com injeção opcional da Logo no Header)
   const hasLogo = tenantData?.logo_url;
-  const brandHeaderHTML = hasLogo 
-  ? `<img src="${tenantData.logo_url}" class="h-20 md:h-24 max-w-[240px] object-contain object-left transform scale-110 original-logo" id="store-logo-slot" alt="${tenantData.store_name}" />`
-  : `<span id="store-title-slot" class="text-xl font-black text-primary tracking-tight uppercase">${tenantData?.store_name || 'VITRINE'}</span>`;
-  
+  const brandHeaderHTML = hasLogo
+    ? `<img src="${tenantData.logo_url}" class="h-20 md:h-24 max-w-[240px] object-contain object-left transform scale-110 original-logo" id="store-logo-slot" alt="${tenantData.store_name}" />`
+    : `<span id="store-title-slot" class="text-xl font-black text-primary tracking-tight uppercase">${tenantData?.store_name || 'VITRINE'}</span>`;
+
   appDiv.innerHTML = `
     <header class="bg-white border-b sticky top-0 z-40 px-4 py-3 shadow-sm flex items-center">
       <div class="max-w-6xl mx-auto w-full flex justify-between items-center">
@@ -119,16 +119,25 @@ async function mountApp() {
   Home.bindEvents(homeContainer);
 
   window.addEventListener('global:add-to-cart', async (e) => {
-    const { id, button } = e.detail;
+    // Recebe o ID e o SIZE (tamanho) que enviamos do modal
+    const { id, size, button } = e.detail;
+
     const { data: product } = await supabase.from('products').select('*').eq('id', id).single();
+
     if (product) {
-      appContext.addToCart(product, 1, {});
+      // Passamos o size dentro do objeto de atributos
+      const attributes = size ? { size: size } : {};
+      appContext.addToCart(product, 1, attributes);
+
       CartDrawer.open();
     }
-    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg> Adicionar`;
-    button.disabled = false;
-  });
 
+    if (button) {
+      button.innerHTML = `Adicionar`; // ou o seu ícone
+      button.disabled = false;
+    }
+  });
+  
   document.getElementById('floating-cart-trigger').onclick = () => CartDrawer.open();
   appContext.subscribe(() => updateUI());
   await updateUI();

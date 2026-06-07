@@ -51,6 +51,11 @@ export const Dashboard = {
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL do Logotipo</label>
                     <input type="url" id="conf-logo" value="${tenant.logo_url || ''}" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="https://linkdaimagem.com/logo.png" />
                   </div>
+                  <!-- Dentro do seu formulário admin-tenant-form, abaixo do conf-hero-subtitle -->
+                  <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL da Imagem da Hero</label>
+                    <input type="url" id="conf-hero-image" value="${tenant.hero_image_url || ''}" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="https://linkdaimagem.com/imagem-hero.jpg" />
+                  </div>
                   <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Título do Banner (Hero)</label>
                     <input type="text" id="conf-hero-title" value="${tenant.hero_title || ''}" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Título da Hero" />
@@ -119,43 +124,31 @@ export const Dashboard = {
                 </div>
               </div>
 
-              <!-- FORMULÁRIO 3: CADASTRO DE PRODUTO + FRETE POR PRODUTO -->
+              <!-- FORMULÁRIO DE CADASTRO DE PRODUTO (ATUALIZADO) -->
               <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 space-y-4">
                 <h3 class="font-bold text-gray-800 text-base border-b pb-2">Cadastrar Novo Produto</h3>
                 <form id="admin-product-form" class="space-y-3">
-                  <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Título do Produto</label>
-                    <input type="text" id="prod-title" required class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ex: Camiseta Slim Fit" />
-                  </div>
-                  <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Categoria</label>
-                    <select id="prod-category" required class="w-full border rounded-lg p-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary">
-                      <option value="" disabled selected>Selecione uma categoria</option>
-                      ${categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
-                    </select>
-                  </div>
+                  <input type="text" id="prod-title" required class="w-full border rounded-lg p-2 text-sm" placeholder="Título do Produto" />
+                  
+                  <select id="prod-category" required class="w-full border rounded-lg p-2 text-sm">
+                    <option value="" disabled selected>Selecione uma categoria</option>
+                    ${categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                  </select>
+
+                  <textarea id="prod-description" class="w-full border rounded-lg p-2 text-sm h-20" placeholder="Descrição detalhada do produto..."></textarea>
+                  
+                  <input type="text" id="prod-attributes" class="w-full border rounded-lg p-2 text-sm" placeholder="Tamanhos ou Variações (ex: P, M, G, GG)" />
+                  <p class="text-[10px] text-gray-400">Separe os tamanhos por vírgula.</p>
+
                   <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Preço (R$)</label>
-                      <input type="number" step="0.01" id="prod-price" required class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="99.90" />
-                    </div>
-                    <div>
-                      <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Promoção (R$)</label>
-                      <input type="number" step="0.01" id="prod-promo" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Opcional" />
-                    </div>
+                    <input type="number" step="0.01" id="prod-price" required class="w-full border rounded-lg p-2 text-sm" placeholder="Preço" />
+                    <input type="number" step="0.01" id="prod-promo" class="w-full border rounded-lg p-2 text-sm" placeholder="Promoção" />
                   </div>
-                  <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL da Imagem</label>
-                    <input type="url" id="prod-image" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="https://exemplo.com/foto.jpg" />
-                  </div>
-                  <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Taxa de Frete/Entrega deste Item (R$)</label>
-                    <input type="number" step="0.01" id="prod-shipping" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="0.00 (Deixe 0 para Grátis ou A Combinar)" />
-                    <p class="text-[10px] text-gray-400 mt-0.5">Se o cliente comprar múltiplos itens com fretes diferentes, o sistema utilizará o maior valor de frete encontrado.</p>
-                  </div>
-                  <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-sm transition shadow-sm mt-2">
-                    Adicionar ao Catálogo
-                  </button>
+                  
+                  <input type="url" id="prod-image" class="w-full border rounded-lg p-2 text-sm" placeholder="URL da Imagem" />
+                  <input type="number" step="0.01" id="prod-shipping" class="w-full border rounded-lg p-2 text-sm" placeholder="Frete (0 para Grátis)" />
+                  
+                  <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 rounded-xl text-sm">Adicionar ao Catálogo</button>
                 </form>
               </div>
 
@@ -175,8 +168,8 @@ export const Dashboard = {
                   ${orders.length === 0 ? `
                     <div class="text-center py-8 text-gray-400 text-sm">Nenhum pedido efetuado ainda.</div>
                   ` : orders.map(ord => {
-                      const date = new Date(ord.created_at).toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                      return `
+      const date = new Date(ord.created_at).toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      return `
                         <div class="border rounded-xl p-4 bg-gray-50 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
                           <div class="space-y-1">
                             <div class="flex items-center gap-2">
@@ -198,7 +191,7 @@ export const Dashboard = {
                           </div>
                         </div>
                       `;
-                    }).join('')}
+    }).join('')}
                 </div>
               </div>
 
@@ -213,8 +206,8 @@ export const Dashboard = {
                   ${products.length === 0 ? `
                     <div class="text-center py-8 text-gray-400 text-sm">Nenhum produto cadastrado.</div>
                   ` : products.map(prod => {
-                      const finalPrice = prod.promo_price || prod.price;
-                      return `
+      const finalPrice = prod.promo_price || prod.price;
+      return `
                         <div class="flex items-center justify-between border rounded-xl p-3 bg-gray-50 hover:bg-gray-100 transition">
                           <div class="flex items-center gap-3">
                             <img src="${prod.image_url}" class="w-10 h-10 object-cover rounded-lg bg-white border" alt="${prod.title}" />
@@ -228,7 +221,7 @@ export const Dashboard = {
                           </button>
                         </div>
                       `;
-                    }).join('')}
+    }).join('')}
                 </div>
               </div>
 
@@ -254,11 +247,12 @@ export const Dashboard = {
         const updatedLogo = container.querySelector('#conf-logo').value;
         const updatedHeroTitle = container.querySelector('#conf-hero-title').value;
         const updatedHeroSubtitle = container.querySelector('#conf-hero-subtitle').value;
+        const updatedHeroImage = container.querySelector('#conf-hero-image').value;
         const primaryColor = container.querySelector('#conf-primary').value;
         const secondaryColor = container.querySelector('#conf-secondary').value;
         const updatedInstagram = container.querySelector('#conf-instagram').value;
         const updatedFacebook = container.querySelector('#conf-facebook').value;
-        
+
         // NOVO: Captura o valor digitado no input de endereço
         const updatedAddress = container.querySelector('#conf-address').value;
 
@@ -272,6 +266,7 @@ export const Dashboard = {
             logo_url: updatedLogo,
             hero_title: updatedHeroTitle,
             hero_subtitle: updatedHeroSubtitle,
+            hero_image_url: updatedHeroImage, // <-- Adicione esta linha
             primary_color: primaryColor,
             secondary_color: secondaryColor,
             instagram_url: updatedInstagram,
@@ -354,18 +349,22 @@ export const Dashboard = {
         const shippingFee = shippingInput ? parseFloat(shippingInput) : 0.00;
 
         const promoPrice = promoInput ? parseFloat(promoInput) : null;
+        // Novos campos capturados
+        const description = container.querySelector('#prod-description').value;
+        const attributesRaw = container.querySelector('#prod-attributes').value;
+        // Transforma "P, M, G" em um array ["P", "M", "G"]
+        const attributesArray = attributesRaw ? attributesRaw.split(',').map(item => item.trim()) : [];
 
-        const { error } = await supabase
-          .from('products')
-          .insert({
-            title,
-            category_id: categoryId,
-            price,
-            promo_price: promoPrice,
-            image_url: imageUrl || 'https://via.placeholder.com/300',
-            shipping_fee: shippingFee,
-            in_stock: true
-          });
+        const { error } = await supabase.from('products').insert({
+          title: container.querySelector('#prod-title').value,
+          category_id: container.querySelector('#prod-category').value,
+          price: parseFloat(container.querySelector('#prod-price').value),
+          promo_price: parseFloat(container.querySelector('#prod-promo').value) || null,
+          image_url: container.querySelector('#prod-image').value,
+          shipping_fee: parseFloat(container.querySelector('#prod-shipping').value) || 0,
+          description: description,        // Novo campo
+          attributes: attributesArray     // Novo campo (JSON/Array no Supabase)
+        });
 
         if (!error) {
           alert('Produto adicionado ao catálogo!');

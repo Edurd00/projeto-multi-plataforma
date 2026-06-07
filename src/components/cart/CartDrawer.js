@@ -6,13 +6,13 @@ export const CartDrawer = {
 
   render() {
     const { cart, tenant } = appContext.getState();
-    
-    const formatCurrency = (value) => 
+
+    const formatCurrency = (value) =>
       new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
     const subtotal = cart.reduce((sum, item) => {
-      const price = item.product.promo_price && item.product.promo_price < item.product.price 
-        ? item.product.promo_price 
+      const price = item.product.promo_price && item.product.promo_price < item.product.price
+        ? item.product.promo_price
         : item.product.price;
       return sum + (price * item.quantity);
     }, 0);
@@ -48,21 +48,28 @@ export const CartDrawer = {
                 <p class="text-xs max-w-xs mt-1">Adicione produtos navegando pela nossa vitrine.</p>
               </div>
             ` : cart.map(item => {
-                const finalPrice = item.product.promo_price && item.product.promo_price < item.product.price 
-                  ? item.product.promo_price 
-                  : item.product.price;
-                
-                const attrsText = Object.entries(item.selectedAttributes)
-                  .map(([k, v]) => `${k}: ${v}`).join(', ');
+      const finalPrice = item.product.promo_price && item.product.promo_price < item.product.price
+        ? item.product.promo_price
+        : item.product.price;
 
-                return `
+      const attrsText = Object.entries(item.selectedAttributes)
+        .map(([k, v]) => `${k}: ${v}`).join(', ');
+
+      return `
                   <div class="flex gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <img src="${item.product.image_url || 'https://via.placeholder.com/100'}" class="w-16 h-16 rounded-lg object-cover bg-white border" />
                     <div class="flex-grow flex flex-col justify-between">
                       <div>
                         <h4 class="text-sm font-semibold text-gray-800 line-clamp-1">${item.product.title}</h4>
-                        ${attrsText ? `<p class="text-xs text-primary font-medium mt-0.5">${attrsText}</p>` : ''}
-                      </div>
+                       
+                       ${attrsText ? `
+                          <div class="mt-1">
+                            <span class="text-[10px] uppercase font-bold text-primary border border-primary/20 bg-primary/5 px-1.5 py-0.5 rounded">
+                              ${attrsText}
+                            </span>
+                          </div>
+                        ` : ''}                      
+                          </div>
                       <div class="flex justify-between items-center mt-2">
                         <span class="text-sm font-bold text-gray-900">${formatCurrency(finalPrice * item.quantity)}</span>
                         <div class="flex items-center border border-gray-200 bg-white rounded-md p-0.5 scale-90">
@@ -74,7 +81,7 @@ export const CartDrawer = {
                     </div>
                   </div>
                 `;
-              }).join('')}
+    }).join('')}
           </div>
 
           ${cart.length > 0 ? `
