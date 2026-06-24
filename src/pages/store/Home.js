@@ -1,4 +1,5 @@
 import { supabase } from '../../config/supabase.js';
+import { appContext } from '../../context/AppContext.js';
 
 export const Home = {
   // Estado local controlado para filtragem em memória
@@ -6,15 +7,16 @@ export const Home = {
   allProducts: [],
 
  async render() {
-    const [productsRes, categoriesRes, tenantRes] = await Promise.all([
+    // Bolt: Otimização de performance - Removido busca redundante de tenant_settings do Supabase,
+    // utilizando os dados já carregados no appContext.
+    const [productsRes, categoriesRes] = await Promise.all([
       supabase.from('products').select('*').eq('in_stock', true).order('created_at', { ascending: false }),
-      supabase.from('categories').select('*').order('name', { ascending: true }),
-      supabase.from('tenant_settings').select('*').maybeSingle()
+      supabase.from('categories').select('*').order('name', { ascending: true })
     ]);
 
     this.allProducts = productsRes.data || [];
     const categories = categoriesRes.data || [];
-    const tenantSettings = tenantRes.data || {};
+    const tenantSettings = appContext.getState().tenant || {};
 
     const storeName = tenantSettings.store_name || 'Nossa Vitrine';
     const heroTitle = tenantSettings.hero_title || 'Bem-vindo à nossa Vitrine';
@@ -259,7 +261,8 @@ export const Home = {
       return `
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col justify-between group hover:shadow-md transition">
           <div class="relative overflow-hidden aspect-square bg-gray-50">
-            <img src="${prod.image_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" alt="${prod.title}" />
+            <!-- Bolt: Adicionado loading="lazy" para melhorar a performance de carregamento inicial -->
+            <img src="${prod.image_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" alt="${prod.title}" loading="lazy" />
             ${hasPromo ? `<span class="absolute top-2 left-2 bg-red-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full uppercase shadow-sm">Promoção</span>` : ''}
           </div>
           

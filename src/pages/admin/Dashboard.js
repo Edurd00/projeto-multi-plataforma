@@ -1,20 +1,21 @@
 import { supabase } from '../../config/supabase.js';
 import { injectTheme } from '../../config/theme.js';
+import { appContext } from '../../context/AppContext.js';
 
 export const Dashboard = {
   async render() {
-    // 1. Busca todos os dados em paralelo direto do Supabase
-    const [ordersRes, productsRes, categoriesRes, tenantRes] = await Promise.all([
+    // Bolt: Otimização de performance - Removido busca redundante de tenant_settings do Supabase,
+    // utilizando os dados já carregados no appContext.
+    const [ordersRes, productsRes, categoriesRes] = await Promise.all([
       supabase.from('orders').select('*').order('created_at', { ascending: false }),
       supabase.from('products').select('*, categories(name)').order('created_at', { ascending: false }),
-      supabase.from('categories').select('*').order('name', { ascending: true }),
-      supabase.from('tenant_settings').select('*').maybeSingle()
+      supabase.from('categories').select('*').order('name', { ascending: true })
     ]);
 
     const orders = ordersRes.data || [];
     const products = productsRes.data || [];
     const categories = categoriesRes.data || [];
-    const tenant = tenantRes.data || {};
+    const tenant = appContext.getState().tenant || {};
 
     const formatCurrency = (value) =>
       new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
