@@ -9,6 +9,8 @@ export default {
       colors: {
         primary: 'var(--color-primary, #3b82f6)',
         secondary: 'var(--color-secondary, #1e3a8a)',
+        lojaPrimaria: 'var(--cor-primaria, #3b82f6)',
+        lojaSecundaria: 'var(--cor-secondary, #1e3a8a)',
       }
     },
   },
