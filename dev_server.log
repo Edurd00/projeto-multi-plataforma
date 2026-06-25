@@ -2,13 +2,8 @@
 > ecommerce-multi-nicho@1.0.0 dev
 > vite
 
-Re-optimizing dependencies because lockfile has changed
-Port 5173 is in use, trying another one...
 
-  VITE v5.4.21  ready in 263 ms
+  VITE v5.4.21  ready in 238 ms
 
-  ➜  Local:   http://localhost:5174/
+  ➜  Local:   http://localhost:5173/
   ➜  Network: use --host to expose
-12:34:30 PM [vite] page reload src/context/AppContext.js
-12:34:38 PM [vite] page reload src/pages/admin/Dashboard.js
-12:34:42 PM [vite] page reload src/services/orderService.js

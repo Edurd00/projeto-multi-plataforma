@@ -3,6 +3,8 @@ import { injectTheme } from '../../config/theme.js';
 import { ImageUpload } from '../../components/ImageUpload.js';
 
 export const Dashboard = {
+  expandedId: null,
+
   async render() {
     try {
       const [ordersRes, productsRes, categoriesRes, tenantRes] = await Promise.all([
@@ -12,7 +14,6 @@ export const Dashboard = {
         supabase.from('tenant_settings').select('*').maybeSingle()
       ]);
 
-      // Verificação de erros específicos do Supabase
       if (ordersRes.error) console.error("Erro ao carregar pedidos:", ordersRes.error);
       if (productsRes.error) console.error("Erro ao carregar produtos:", productsRes.error);
       if (categoriesRes.error) console.error("Erro ao carregar categorias:", categoriesRes.error);
@@ -27,8 +28,6 @@ export const Dashboard = {
 
       const formatCurrency = (value) =>
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-
-      const placeholderImg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`;
 
       return `
         <div class="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -152,14 +151,14 @@ export const Dashboard = {
                   <div class="grid grid-cols-1 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin" id="admin-product-list">
                     ${products.map(prod => {
                       const temDesconto = prod.promo_price && Number(prod.price) > Number(prod.promo_price);
-                      const isExpanded = false; // Initial state
+                      const isExpanded = this.expandedId === prod.id;
 
                       return `
                         <div class="border border-gray-100 rounded-lg bg-white mb-1.5 overflow-hidden shadow-sm mx-2">
                           <div onclick="window.toggleAdminProduct('${prod.id}')" class="p-2 flex items-center justify-between bg-gray-50/50 cursor-pointer hover:bg-gray-50 transition-colors duration-150">
                             <div class="flex items-center gap-2">
                               <div class="w-8 h-8 border rounded-md overflow-hidden bg-white flex-shrink-0">
-                                <img src="${prod.image_url || ''}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=80';" />
+                                <img src="${prod.image_url || ''}" class="w-full h-full object-cover" />
                               </div>
                               <div class="min-w-0">
                                 <h4 class="text-xs font-semibold text-gray-800 truncate max-w-[180px]">${prod.title}</h4>
@@ -170,10 +169,10 @@ export const Dashboard = {
                                 </p>
                               </div>
                             </div>
-                            <span id="label-${prod.id}" class="text-gray-400 text-[10px] md:hidden font-medium px-1.5 py-0.5 bg-gray-100 rounded">▼ Ver</span>
+                            <span id="label-${prod.id}" class="text-gray-400 text-[10px] md:hidden font-medium px-1.5 py-0.5 bg-gray-100 rounded">${isExpanded ? '▲ Sobe' : '▼ Ver'}</span>
                           </div>
 
-                          <div id="details-${prod.id}" class="hidden md:block p-3 border-t border-gray-50 bg-white text-xs">
+                          <div id="details-${prod.id}" class="${isExpanded ? '' : 'hidden md:block'} p-3 border-t border-gray-50 bg-white text-xs">
                             <p class="text-gray-600 mb-2 leading-relaxed text-[11px]">${prod.description || 'Sem descrição.'}</p>
                             <div class="flex gap-2 justify-end pt-2 border-t border-gray-50">
                               <button onclick="window.editAdminProduct('${prod.id}')" class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md font-bold hover:bg-blue-100 transition">✏️ Editar</button>
@@ -298,12 +297,12 @@ export const Dashboard = {
     let itemToDelete = null;
 
     window.toggleAdminProduct = (id) => {
-      const el = container.querySelector(`#details-${id}`);
-      const label = container.querySelector(`#label-${id}`);
-      if (el) {
-        const isHidden = el.classList.toggle('hidden');
-        if (label) label.innerText = isHidden ? '▼ Ver' : '▲ Sobe';
+      if (this.expandedId === id) {
+        this.expandedId = null;
+      } else {
+        this.expandedId = id;
       }
+      onRefresh();
     };
 
     window.deleteAdminProduct = (id, title) => {
