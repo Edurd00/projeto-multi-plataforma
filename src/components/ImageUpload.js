@@ -57,13 +57,13 @@ export const ImageUpload = {
           const filePath = `uploads/${fileName}`;
 
           const { error: uploadError } = await supabase.storage
-            .from('images')
+            .from('loja')
             .upload(filePath, file);
 
           if (uploadError) throw uploadError;
 
           const { data: { publicUrl } } = supabase.storage
-            .from('images')
+            .from('loja')
             .getPublicUrl(filePath);
 
           urlInput.value = publicUrl;
