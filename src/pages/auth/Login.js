@@ -13,14 +13,14 @@ export const Login = {
           <form id="login-form" class="space-y-4">
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">E-mail</label>
-              <input type="email" id="login-email" required class="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary focus:outline-none" placeholder="admin@sualoja.com" />
+              <input type="email" id="login-email" required class="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-lojaPrimaria focus:outline-none" placeholder="admin@sualoja.com" />
             </div>
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Senha</label>
-              <input type="password" id="login-password" required class="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-primary focus:outline-none" placeholder="••••••••" />
+              <input type="password" id="login-password" required class="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-lojaPrimaria focus:outline-none" placeholder="••••••••" />
             </div>
             
-            <button type="submit" class="w-full bg-primary hover:bg-opacity-90 text-white font-bold py-3 rounded-xl transition text-sm shadow-sm mt-2">
+            <button type="submit" class="w-full bg-lojaPrimaria hover:bg-opacity-90 text-white font-bold py-3 rounded-xl transition text-sm shadow-sm mt-2">
               Entrar no Painel
             </button>
           </form>

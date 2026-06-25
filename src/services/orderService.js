@@ -64,7 +64,8 @@ export const orderService = {
       text += `*Forma de Entrega:* ${deliveryAddress}\n`;
       text += `*Total do Pedido:* ${formatCurrency(totalAmount)}\n`;
 
-      const whatsappUrl = `https://wa.me/${tenant.whatsapp_number}?text=${encodeURIComponent(text)}`;
+      const cleanPhone = tenant.whatsapp_number.replace(/\D/g, '');
+      const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
       window.open(whatsappUrl, '_blank');
 
       return { success: true, orderId: order.id };

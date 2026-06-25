@@ -30,11 +30,11 @@ export const CartDrawer = {
           
           <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
             <div class="flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-lojaPrimaria" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
               <h2 class="text-lg font-bold text-gray-800">Seu Carrinho</h2>
-              <span class="bg-primary text-white text-xs px-2 py-0.5 rounded-full font-bold">${cart.length}</span>
+              <span class="bg-lojaPrimaria text-white text-xs px-2 py-0.5 rounded-full font-bold">${cart.length}</span>
             </div>
             <button id="close-cart" class="p-2 text-gray-500 hover:text-gray-800 rounded-lg hover:bg-gray-100 transition">
               &#x2715;
@@ -64,7 +64,7 @@ export const CartDrawer = {
                        
                        ${attrsText ? `
                           <div class="mt-1">
-                            <span class="text-[10px] uppercase font-bold text-primary border border-primary/20 bg-primary/5 px-1.5 py-0.5 rounded">
+                            <span class="text-[10px] uppercase font-bold text-lojaPrimaria border border-lojaPrimaria/20 bg-lojaPrimaria/5 px-1.5 py-0.5 rounded">
                               ${attrsText}
                             </span>
                           </div>
@@ -94,7 +94,7 @@ export const CartDrawer = {
                 </div>
               </div>
               
-              <button id="go-to-checkout" class="w-full bg-primary hover:bg-opacity-95 text-white font-bold py-3 rounded-xl transition shadow-sm text-center block mt-2 text-sm">
+              <button id="go-to-checkout" class="w-full bg-lojaPrimaria hover:bg-opacity-95 text-white font-bold py-3 rounded-xl transition shadow-sm text-center block mt-2 text-sm">
                 Finalizar Pedido
               </button>
             </div>

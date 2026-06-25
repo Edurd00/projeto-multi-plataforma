@@ -39,13 +39,13 @@ export const ProductCard = {
               <span class="text-xs text-gray-400 line-through">${formatCurrency(product.price)}</span>
               <span class="text-lg font-bold text-red-600">${formatCurrency(product.promo_price)}</span>
             ` : `
-              <span class="text-lg font-bold text-primary">${formatCurrency(product.price)}</span>
+              <span class="text-lg font-bold text-lojaPrimaria">${formatCurrency(product.price)}</span>
             `}
           </div>
 
           <button 
             data-id="${product.id}"
-            class="js-add-to-cart w-full bg-primary hover:bg-opacity-90 text-white font-medium py-2 px-4 rounded-lg transition duration-200 text-sm flex items-center justify-center gap-2"
+            class="js-add-to-cart w-full bg-lojaPrimaria hover:bg-opacity-90 text-white font-medium py-2 px-4 rounded-lg transition duration-200 text-sm flex items-center justify-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />

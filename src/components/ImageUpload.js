@@ -16,7 +16,7 @@ export const ImageUpload = {
                  </div>`
             }
             <div id="loading-${id}" class="absolute inset-0 bg-white/80 items-center justify-center hidden">
-              <div class="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
+              <div class="animate-spin rounded-full h-5 w-5 border-2 border-lojaPrimaria border-t-transparent"></div>
             </div>
           </div>
           <div class="flex-grow">
@@ -71,7 +71,7 @@ export const ImageUpload = {
           previewContainer.innerHTML = `
             <img src="${publicUrl}" id="preview-${id}" class="w-full h-full object-cover" />
             <div id="loading-${id}" class="absolute inset-0 bg-white/80 items-center justify-center hidden">
-              <div class="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent"></div>
+              <div class="animate-spin rounded-full h-5 w-5 border-2 border-lojaPrimaria border-t-transparent"></div>
             </div>
           `;
 

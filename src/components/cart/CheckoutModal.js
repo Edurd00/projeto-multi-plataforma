@@ -62,19 +62,19 @@ export const CheckoutModal = {
           <form id="checkout-form" class="space-y-3.5">
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Seu Nome *</label>
-              <input type="text" id="form-name" required class="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Ex: João Silva" />
+              <input type="text" id="form-name" required class="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-lojaPrimaria focus:outline-none" placeholder="Ex: João Silva" />
             </div>
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">WhatsApp de Contato *</label>
-              <input type="tel" id="form-phone" required class="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Ex: 11999999999" />
+              <input type="tel" id="form-phone" required class="w-full border border-gray-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-lojaPrimaria focus:outline-none" placeholder="Ex: 11999999999" />
             </div>
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Endereço de Entrega *</label>
-              <textarea id="form-address" required class="w-full border border-gray-200 rounded-lg p-2.5 text-sm h-16 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Rua, número, bairro"></textarea>
+              <textarea id="form-address" required class="w-full border border-gray-200 rounded-lg p-2.5 text-sm h-16 focus:ring-2 focus:ring-lojaPrimaria focus:outline-none" placeholder="Rua, número, bairro"></textarea>
             </div>
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Forma de Pagamento *</label>
-              <select id="form-payment" required class="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary focus:outline-none">
+              <select id="form-payment" required class="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-lojaPrimaria focus:outline-none">
                 <option value="Pix">Pix</option>
                 <option value="Cartão de Crédito/Débito">Cartão de Crédito/Débito</option>
                 <option value="Dinheiro">Dinheiro</option>

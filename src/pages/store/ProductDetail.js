@@ -28,7 +28,7 @@ export const ProductDetail = {
 
           <div class="flex flex-col justify-between">
             <div>
-              <span class="text-xs font-semibold uppercase tracking-wider text-primary mb-1 block">
+              <span class="text-xs font-semibold uppercase tracking-wider text-lojaPrimaria mb-1 block">
                 ${product.categories?.name || 'Geral'}
               </span>
               <h1 class="text-3xl font-bold text-gray-900 mb-2">${product.title}</h1>
@@ -39,7 +39,7 @@ export const ProductDetail = {
                   <span class="text-sm text-gray-400 line-through block">${formatCurrency(product.price)}</span>
                   <span class="text-3xl font-black text-red-600">${formatCurrency(product.promo_price)}</span>
                 ` : `
-                  <span class="text-3xl font-black text-primary">${formatCurrency(product.price)}</span>
+                  <span class="text-3xl font-black text-lojaPrimaria">${formatCurrency(product.price)}</span>
                 `}
               </div>
 
@@ -49,7 +49,7 @@ export const ProductDetail = {
                     return `
                       <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">${key}</label>
-                        <select name="attr_${key}" class="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-primary focus:outline-none">
+                        <select name="attr_${key}" class="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-lojaPrimaria focus:outline-none">
                           ${value.map(option => `<option value="${option}">${option}</option>`).join('')}
                         </select>
                       </div>
@@ -66,7 +66,7 @@ export const ProductDetail = {
                 <span id="qty-display" class="font-semibold text-sm">1</span>
                 <button id="btn-inc" class="px-3 font-bold text-gray-600 hover:text-gray-900">+</button>
               </div>
-              <button id="btn-buy-now" class="w-2/3 bg-primary text-white font-bold py-3 rounded-lg hover:bg-opacity-90 transition shadow-sm flex items-center justify-center gap-2">
+              <button id="btn-buy-now" class="w-2/3 bg-lojaPrimaria text-white font-bold py-3 rounded-lg hover:bg-opacity-90 transition shadow-sm flex items-center justify-center gap-2">
                 Comprar Agora
               </button>
             </div>

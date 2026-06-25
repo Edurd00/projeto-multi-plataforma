@@ -61,6 +61,11 @@ class AppState {
     this.saveCart();
   }
 
+  clearCart() {
+    this.state.cart = [];
+    this.saveCart();
+  }
+
   saveCart() {
     localStorage.setItem('cart', JSON.stringify(this.state.cart));
     this.notify();
