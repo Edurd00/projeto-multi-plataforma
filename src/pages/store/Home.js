@@ -6,13 +6,18 @@ export const Home = {
   allProducts: [],
 
   async render() {
-    const [productsRes, categoriesRes, tenantRes] = await Promise.all([
-      supabase.from('products').select('*, categories(name)').order('created_at', { ascending: false }),
-      supabase.from('categories').select('*').order('name', { ascending: true }),
-      supabase.from('tenant_settings').select('*').maybeSingle()
-    ]);
+    try {
+      const [productsRes, categoriesRes, tenantRes] = await Promise.all([
+        supabase.from('products').select('*, categories(name)').order('created_at', { ascending: false }),
+        supabase.from('categories').select('*').order('name', { ascending: true }),
+        supabase.from('tenant_settings').select('*').maybeSingle()
+      ]);
 
-    this.allProducts = productsRes.data || [];
+      if (productsRes.error) console.error("Erro produtos:", productsRes.error);
+      if (categoriesRes.error) console.error("Erro categorias:", categoriesRes.error);
+      if (tenantRes.error) console.error("Erro tenant:", tenantRes.error);
+
+      this.allProducts = productsRes.data || [];
     const categories = categoriesRes.data || [];
     const tenant = tenantRes.data || {};
 
@@ -101,6 +106,14 @@ export const Home = {
         <span class="absolute right-full mr-3 bg-gray-900 text-white text-xs font-bold py-2 px-3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Fale Conosco</span>
       </a>
     `;
+    } catch (err) {
+      console.error("Erro ao renderizar Home:", err);
+      return `<div class="p-20 text-center">
+        <h2 class="text-2xl font-black text-gray-900">Ops! Algo deu errado.</h2>
+        <p class="text-gray-500 mt-2">${err.message}</p>
+        <button onclick="location.reload()" class="mt-6 bg-lojaPrimaria text-white px-8 py-3 rounded-2xl font-bold shadow-lg">Tentar Novamente</button>
+      </div>`;
+    }
   },
 
   renderProductsHTML(products, formatCurrency) {
