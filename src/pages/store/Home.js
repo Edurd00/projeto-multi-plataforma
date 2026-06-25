@@ -30,7 +30,7 @@ export const Home = {
 
       return `
         <section class="relative w-full h-[400px] md:h-[500px] flex items-center justify-center text-center px-4" ${heroStyle}>
-          <div class="max-w-4xl mx-auto space-y-4 md:space-y-6 relative z-10 text-white drop-shadow-2xl">
+          <div class="max-w-4xl mx-auto space-y-4 md:space-y-6 relative z-10 text-white drop-shadow-md">
             <h2 class="text-4xl md:text-7xl font-black uppercase tracking-tight leading-none">${tenant.hero_title || 'Bem-vindo'}</h2>
             <p class="text-lg md:text-2xl font-medium opacity-90">${tenant.hero_subtitle || ''}</p>
           </div>
@@ -49,17 +49,22 @@ export const Home = {
           </section>
         </main>
 
-        <!-- FOOTER MODERNO -->
+        <!-- FOOTER DINÂMICO -->
         <footer class="bg-white border-t border-gray-100 pt-16 pb-24">
           <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12">
-            <div class="space-y-6">
+            <div class="space-y-6 text-center md:text-left">
               <h3 class="text-xl font-black text-gray-900 uppercase tracking-tight">${tenant.store_name || 'VITRINE'}</h3>
               <p class="text-sm text-gray-500 leading-relaxed">${tenant.footer_bio || 'A melhor seleção de produtos para você, com entrega rápida e atendimento via WhatsApp.'}</p>
+
+              <div class="flex items-center gap-4 mt-2 justify-center md:justify-start">
+                ${tenant.instagram_url ? `<a href="${tenant.instagram_url}" target="_blank" class="text-gray-400 hover:text-lojaPrimaria text-xs font-semibold transition">Instagram</a>` : ''}
+                ${tenant.facebook_url ? `<a href="${tenant.facebook_url}" target="_blank" class="text-gray-400 hover:text-lojaPrimaria text-xs font-semibold transition">Facebook</a>` : ''}
+              </div>
             </div>
 
             <div class="space-y-6">
-              <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest">Navegação</h4>
-              <ul class="space-y-3 text-sm font-bold text-gray-700">
+              <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest text-center md:text-left">Navegação</h4>
+              <ul class="space-y-3 text-sm font-bold text-gray-700 text-center md:text-left">
                 <li><a href="#" class="hover:text-lojaPrimaria transition">Início</a></li>
                 <li><a href="#" class="hover:text-lojaPrimaria transition">Categorias</a></li>
                 <li><a href="/?page=admin" class="hover:text-lojaPrimaria transition">Painel Administrativo</a></li>
@@ -67,22 +72,22 @@ export const Home = {
             </div>
 
             <div class="space-y-6">
-              <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest">Contato e Localização</h4>
-              <ul class="space-y-3 text-sm text-gray-600">
-                <li class="flex items-start gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+              <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest text-center md:text-left">Contato</h4>
+              <ul class="space-y-3 text-sm text-gray-600 text-center md:text-left">
+                <li class="flex items-center md:items-start justify-center md:justify-start gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                   <span>${tenant.address || 'Endereço não configurado'}</span>
                 </li>
-                <li class="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                <li class="flex items-center justify-center md:justify-start gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                   <span>${tenant.whatsapp_number || ''}</span>
                 </li>
               </ul>
             </div>
 
-            <div class="space-y-6">
+            <div class="space-y-6 text-center md:text-left">
               <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest">Pagamento</h4>
-              <div class="flex flex-wrap gap-2 opacity-50 grayscale">
+              <div class="flex flex-wrap gap-2 justify-center md:justify-start opacity-50 grayscale">
                 <img src="https://vignette.wikia.nocookie.net/logopedia/images/b/b2/Mastercard_2019.svg" class="h-6" alt="Mastercard" />
                 <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" class="h-4" alt="Visa" />
                 <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" class="h-5" alt="Paypal" />
@@ -91,7 +96,7 @@ export const Home = {
             </div>
           </div>
 
-          <div class="max-w-7xl mx-auto px-4 mt-16 pt-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+          <div class="max-w-7xl mx-auto px-4 mt-16 pt-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">
             <p>© 2024 ${tenant.store_name || 'Vitrine'}. Todos os direitos reservados.</p>
             <div class="flex items-center gap-6">
                <a href="#" class="hover:text-gray-900 transition">Termos</a>

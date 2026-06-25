@@ -3,8 +3,6 @@ import { injectTheme } from '../../config/theme.js';
 import { ImageUpload } from '../../components/ImageUpload.js';
 
 export const Dashboard = {
-  expandedId: null,
-
   async render() {
     try {
       const [ordersRes, productsRes, categoriesRes, tenantRes] = await Promise.all([
@@ -19,15 +17,56 @@ export const Dashboard = {
       if (categoriesRes.error) console.error("Erro ao carregar categorias:", categoriesRes.error);
       if (tenantRes.error) console.error("Erro ao carregar configurações:", tenantRes.error);
 
-      const orders = ordersRes.data || [];
       const products = productsRes.data || [];
       const categories = categoriesRes.data || [];
       const tenant = tenantRes.data || {};
 
       const isConfigured = tenant.store_name && tenant.logo_url && tenant.whatsapp_number;
 
-      const formatCurrency = (value) =>
-        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+      const renderAdminProductList = (products, expandedId = null) => {
+        return products.map(prod => {
+          const isExpanded = prod.id === expandedId;
+          // Mapping schema to requested template: name -> title, price -> (promo_price || price), price_from -> price (if promo exists)
+          const displayPrice = prod.promo_price || prod.price;
+          const priceFrom = prod.promo_price ? prod.price : null;
+          const temDesconto = priceFrom && Number(priceFrom) > Number(displayPrice);
+
+          return `
+            <div class="border border-gray-100 rounded-lg bg-white mb-2 overflow-hidden shadow-sm mx-2 max-w-md md:max-w-full">
+              <div onclick="window.toggleAdminProduct('${prod.id}')" class="p-2.5 flex items-center justify-between bg-gray-50/70 cursor-pointer hover:bg-gray-50 transition-all duration-150">
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div class="w-10 h-10 border border-gray-200 rounded-md overflow-hidden bg-white flex-shrink-0">
+                    <img src="${prod.image_url || ''}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=80';" />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <h4 class="text-xs font-bold text-gray-800 truncate">${prod.title}</h4>
+                    <p class="text-[10px] text-gray-500 mt-0.5">
+                      ${temDesconto ? `<span class="line-through mr-1 text-gray-400">R$ ${priceFrom}</span>` : ''}
+                      <span class="${temDesconto ? 'text-red-600 font-semibold' : 'text-gray-700'}">R$ ${displayPrice}</span>
+                      • <span class="bg-gray-100 px-1 py-0.5 rounded text-[9px] font-medium text-gray-600">${prod.categories?.name || 'Geral'}</span>
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 ml-2">
+                  <span class="text-gray-400 text-[9px] font-bold px-1.5 py-0.5 bg-gray-100 rounded-md transition-all">${isExpanded ? '▲ Fechar' : '▼ Ver'}</span>
+                </div>
+              </div>
+
+              <div class="${isExpanded ? 'block' : 'hidden'} p-3 border-t border-gray-100 bg-white text-xs">
+                <p class="text-gray-600 mb-3 leading-relaxed text-[11px] font-normal">${prod.description || 'Sem descrição cadastrada para este item.'}</p>
+                <div class="flex gap-2 justify-end pt-2 border-t border-gray-50">
+                  <button type="button" onclick="event.stopPropagation(); window.editAdminProduct('${prod.id}')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1">
+                    ✏️ Editar
+                  </button>
+                  <button type="button" onclick="event.stopPropagation(); window.deleteAdminProduct('${prod.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1">
+                    🗑️ Excluir
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      };
 
       return `
         <div class="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -91,6 +130,16 @@ export const Dashboard = {
                           </div>
                         </div>
                       </div>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Instagram URL</label>
+                           <input type="text" id="conf-instagram" value="${tenant.instagram_url || ''}" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm" placeholder="https://instagram.com/sualoja" />
+                        </div>
+                        <div>
+                           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Facebook URL</label>
+                           <input type="text" id="conf-facebook" value="${tenant.facebook_url || ''}" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm" placeholder="https://facebook.com/sualoja" />
+                        </div>
+                      </div>
                     </div>
 
                     <div class="space-y-4 pt-4 border-t border-gray-50">
@@ -113,6 +162,19 @@ export const Dashboard = {
                       <div id="btn-save-loader" class="hidden animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                     </button>
                   </form>
+                </div>
+
+                <!-- GERENCIAMENTO DE CATEGORIAS -->
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-4">
+                   <h3 class="font-black text-gray-900 text-lg">Gerenciar Categorias</h3>
+                   <div class="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
+                      ${categories.map(cat => `
+                        <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100">
+                           <span class="text-sm font-bold text-gray-700">${cat.name}</span>
+                           <button onclick="window.deleteCategory('${cat.id}')" class="text-red-400 hover:text-red-600 transition">🗑️</button>
+                        </div>
+                      `).join('')}
+                   </div>
                 </div>
               </div>
 
@@ -149,39 +211,7 @@ export const Dashboard = {
                 <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-6">
                   <h3 class="font-black text-gray-900 text-lg">Produtos</h3>
                   <div class="grid grid-cols-1 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin" id="admin-product-list">
-                    ${products.map(prod => {
-                      const temDesconto = prod.promo_price && Number(prod.price) > Number(prod.promo_price);
-                      const isExpanded = this.expandedId === prod.id;
-
-                      return `
-                        <div class="border border-gray-100 rounded-lg bg-white mb-1.5 overflow-hidden shadow-sm mx-2">
-                          <div onclick="window.toggleAdminProduct('${prod.id}')" class="p-2 flex items-center justify-between bg-gray-50/50 cursor-pointer hover:bg-gray-50 transition-colors duration-150">
-                            <div class="flex items-center gap-2">
-                              <div class="w-8 h-8 border rounded-md overflow-hidden bg-white flex-shrink-0">
-                                <img src="${prod.image_url || ''}" class="w-full h-full object-cover" />
-                              </div>
-                              <div class="min-w-0">
-                                <h4 class="text-xs font-semibold text-gray-800 truncate max-w-[180px]">${prod.title}</h4>
-                                <p class="text-[10px] text-gray-500">
-                                  ${temDesconto ? `<span class="line-through mr-1 text-gray-400">R$ ${prod.price}</span>` : ''}
-                                  <span class="${temDesconto ? 'text-red-600 font-medium' : ''}">${formatCurrency(prod.promo_price || prod.price)}</span>
-                                  • ${prod.categories?.name || 'Geral'}
-                                </p>
-                              </div>
-                            </div>
-                            <span id="label-${prod.id}" class="text-gray-400 text-[10px] md:hidden font-medium px-1.5 py-0.5 bg-gray-100 rounded">${isExpanded ? '▲ Sobe' : '▼ Ver'}</span>
-                          </div>
-
-                          <div id="details-${prod.id}" class="${isExpanded ? '' : 'hidden md:block'} p-3 border-t border-gray-50 bg-white text-xs">
-                            <p class="text-gray-600 mb-2 leading-relaxed text-[11px]">${prod.description || 'Sem descrição.'}</p>
-                            <div class="flex gap-2 justify-end pt-2 border-t border-gray-50">
-                              <button onclick="window.editAdminProduct('${prod.id}')" class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md font-bold hover:bg-blue-100 transition">✏️ Editar</button>
-                              <button onclick="window.deleteAdminProduct('${prod.id}', '${prod.title}')" class="bg-red-50 text-red-600 px-2.5 py-1 rounded-md font-bold hover:bg-red-100 transition">🗑️ Excluir</button>
-                            </div>
-                          </div>
-                        </div>
-                      `;
-                    }).join('')}
+                    ${renderAdminProductList(products, window.currentExpandedId)}
                   </div>
                 </div>
               </div>
@@ -261,7 +291,9 @@ export const Dashboard = {
             whatsapp_number: container.querySelector('#conf-phone').value,
             address: container.querySelector('#conf-address').value,
             primary_color: container.querySelector('#conf-primary').value,
-            secondary_color: container.querySelector('#conf-secondary').value
+            secondary_color: container.querySelector('#conf-secondary').value,
+            instagram_url: container.querySelector('#conf-instagram').value,
+            facebook_url: container.querySelector('#conf-facebook').value
           };
 
           const { data: currentTenant } = await supabase.from('tenant_settings').select('id').maybeSingle();
@@ -296,19 +328,29 @@ export const Dashboard = {
     const btnConfirmDelete = container.querySelector('#btn-confirm-delete');
     let itemToDelete = null;
 
+    // Vinculação de Controle e Correção da Lógica de Fechamento do Accordion:
     window.toggleAdminProduct = (id) => {
-      if (this.expandedId === id) {
-        this.expandedId = null;
-      } else {
-        this.expandedId = id;
-      }
-      onRefresh();
+      // Se clicar no mesmo ID que já está aberto, define como null para fechar
+      window.currentExpandedId = window.currentExpandedId === id ? null : id;
+      // Chame a sua função interna de renderização do painel passando o window.currentExpandedId atualizado
+      if (typeof onRefresh === 'function') onRefresh();
     };
 
-    window.deleteAdminProduct = (id, title) => {
+    window.atualizarListaProdutosAdmin = () => onRefresh();
+
+    window.deleteAdminProduct = async (id) => {
+      const { data: prod } = await supabase.from('products').select('title').eq('id', id).single();
       itemToDelete = id;
-      deleteItemName.innerText = title;
+      deleteItemName.innerText = prod?.title || "este produto";
       deleteModal.classList.remove('hidden');
+    };
+
+    window.deleteCategory = async (id) => {
+       if (confirm('Deseja realmente excluir esta categoria? Os produtos atrelados ficarão sem categoria.')) {
+          const { error } = await supabase.from('categories').delete().eq('id', id);
+          if (error) alert("Erro ao excluir: " + error.message);
+          else onRefresh();
+       }
     };
 
     btnCancelDelete.onclick = () => deleteModal.classList.add('hidden');
@@ -378,6 +420,10 @@ export const Dashboard = {
           }
 
           if (error) throw error;
+          // Reset form after save
+          productForm.reset();
+          container.querySelector('#prod-id').value = '';
+          container.querySelector('#product-form-title').innerText = 'Cadastrar Produto';
           onRefresh();
         } catch (err) {
           alert("Erro ao salvar produto: " + err.message);
