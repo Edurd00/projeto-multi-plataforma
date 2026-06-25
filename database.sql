@@ -84,12 +84,6 @@ CREATE TABLE order_items (
 -- 3. Add an RLS policy to allow 'authenticated' users to INSERT/UPDATE/DELETE.
 
 -- ==========================================
--- INITIAL SEED (Optional)
--- ==========================================
--- INSERT INTO tenant_settings (store_name, whatsapp_number)
--- VALUES ('Minha Loja Profissional', '5511999999999');
-
--- ==========================================
 -- SECURITY (RLS)
 -- ==========================================
 -- Enable RLS on all tables
@@ -105,9 +99,9 @@ CREATE POLICY "Public Read Categories" ON categories FOR SELECT USING (true);
 CREATE POLICY "Public Read Products" ON products FOR SELECT USING (true);
 
 -- Authenticated write access (Admin)
-CREATE POLICY "Admin Write Tenant" ON tenant_settings ALL TO authenticated USING (true);
-CREATE POLICY "Admin Write Categories" ON categories ALL TO authenticated USING (true);
-CREATE POLICY "Admin Write Products" ON products ALL TO authenticated USING (true);
+CREATE POLICY "Admin Write Tenant" ON tenant_settings FOR ALL TO authenticated USING (true);
+CREATE POLICY "Admin Write Categories" ON categories FOR ALL TO authenticated USING (true);
+CREATE POLICY "Admin Write Products" ON products FOR ALL TO authenticated USING (true);
 CREATE POLICY "Admin Read Orders" ON orders FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Admin Update Orders" ON orders FOR UPDATE TO authenticated USING (true);
 
