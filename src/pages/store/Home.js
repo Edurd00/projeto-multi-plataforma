@@ -34,7 +34,6 @@ export const Home = {
             <h2 class="text-4xl md:text-7xl font-black uppercase tracking-tight leading-none">${tenant.hero_title || 'Bem-vindo'}</h2>
             <p class="text-lg md:text-2xl font-medium opacity-90">${tenant.hero_subtitle || ''}</p>
           </div>
-          <!-- Overlay para garantir legibilidade se a imagem for clara -->
           <div class="absolute inset-0 bg-black/20 pointer-events-none"></div>
         </section>
 
@@ -51,58 +50,36 @@ export const Home = {
           </section>
         </main>
 
-        <!-- FOOTER DINÂMICO -->
-        <footer class="bg-white border-t border-gray-100 pt-16 pb-24">
-          <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12">
-            <div class="space-y-6 text-center md:text-left">
-              <h3 class="text-xl font-black text-gray-900 uppercase tracking-tight">${tenant.store_name || 'VITRINE'}</h3>
-              <p class="text-sm text-gray-500 leading-relaxed">${tenant.footer_bio || 'A melhor seleção de produtos para você, com entrega rápida e atendimento via WhatsApp.'}</p>
+        <!-- RODAPÉ MODERNO E COMPACTO -->
+        <footer class="bg-white border-t border-gray-100 pt-12 pb-20">
+          <div class="max-w-4xl mx-auto px-4 text-center space-y-8">
+            <div class="space-y-4">
+              <h3 class="text-lg font-black text-gray-900 uppercase tracking-tighter">${tenant.store_name || 'VITRINE'}</h3>
+              <p class="text-xs text-gray-500 leading-relaxed max-w-md mx-auto font-medium">${tenant.footer_bio || 'A melhor seleção de produtos para você, com entrega rápida e atendimento via WhatsApp.'}</p>
+            </div>
 
-              <div class="flex items-center gap-4 mt-2 justify-center md:justify-start">
-                ${tenant.instagram_url ? `<a href="${tenant.instagram_url}" target="_blank" class="text-gray-400 hover:text-lojaPrimaria text-xs font-semibold transition">Instagram</a>` : ''}
-                ${tenant.facebook_url ? `<a href="${tenant.facebook_url}" target="_blank" class="text-gray-400 hover:text-lojaPrimaria text-xs font-semibold transition">Facebook</a>` : ''}
+            <div class="flex flex-col items-center gap-6">
+              <div class="flex items-center justify-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                <a href="#" class="hover:text-lojaPrimaria transition">Início</a>
+                <span class="w-1 h-1 bg-gray-200 rounded-full"></span>
+                <a href="/?page=admin" class="hover:text-lojaPrimaria transition">Painel</a>
+                <span class="w-1 h-1 bg-gray-200 rounded-full"></span>
+                <a href="#" class="hover:text-lojaPrimaria transition">Termos</a>
+              </div>
+
+              <!-- Ícones Sociais Minimalistas -->
+              <div class="flex justify-center gap-3">
+                ${tenant.instagram_url ? `<a href="${tenant.instagram_url}" target="_blank" class="w-10 h-10 bg-gray-50 hover:bg-lojaPrimaria hover:text-white text-gray-400 rounded-full flex items-center justify-center transition-all shadow-sm group">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" /></svg>
+                </a>` : ''}
+                ${tenant.facebook_url ? `<a href="${tenant.facebook_url}" target="_blank" class="w-10 h-10 bg-gray-50 hover:bg-lojaPrimaria hover:text-white text-gray-400 rounded-full flex items-center justify-center transition-all shadow-sm group">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" /></svg>
+                </a>` : ''}
               </div>
             </div>
 
-            <div class="space-y-6">
-              <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest text-center md:text-left">Navegação</h4>
-              <ul class="space-y-3 text-sm font-bold text-gray-700 text-center md:text-left">
-                <li><a href="#" class="hover:text-lojaPrimaria transition">Início</a></li>
-                <li><a href="#" class="hover:text-lojaPrimaria transition">Categorias</a></li>
-                <li><a href="/?page=admin" class="hover:text-lojaPrimaria transition">Painel Administrativo</a></li>
-              </ul>
-            </div>
-
-            <div class="space-y-6">
-              <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest text-center md:text-left">Contato</h4>
-              <ul class="space-y-3 text-sm text-gray-600 text-center md:text-left">
-                <li class="flex items-center md:items-start justify-center md:justify-start gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  <span>${tenant.address || 'Endereço não configurado'}</span>
-                </li>
-                <li class="flex items-center justify-center md:justify-start gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                  <span>${tenant.whatsapp_number || ''}</span>
-                </li>
-              </ul>
-            </div>
-
-            <div class="space-y-6 text-center md:text-left">
-              <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest">Pagamento</h4>
-              <div class="flex flex-wrap gap-2 justify-center md:justify-start opacity-50 grayscale">
-                <img src="https://vignette.wikia.nocookie.net/logopedia/images/b/b2/Mastercard_2019.svg" class="h-6" alt="Mastercard" />
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" class="h-4" alt="Visa" />
-                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" class="h-5" alt="Paypal" />
-                <img src="https://logopng.com.br/logos/pix-106.png" class="h-5" alt="Pix" />
-              </div>
-            </div>
-          </div>
-
-          <div class="max-w-7xl mx-auto px-4 mt-16 pt-8 border-t border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">
-            <p>© 2024 ${tenant.store_name || 'Vitrine'}. Todos os direitos reservados.</p>
-            <div class="flex items-center gap-6">
-               <a href="#" class="hover:text-gray-900 transition">Termos</a>
-               <a href="#" class="hover:text-gray-900 transition">Privacidade</a>
+            <div class="pt-8 border-t border-gray-50">
+                <p class="text-[9px] font-black text-gray-300 uppercase tracking-[0.3em]">© 2024 ${tenant.store_name || 'Vitrine'}</p>
             </div>
           </div>
         </footer>

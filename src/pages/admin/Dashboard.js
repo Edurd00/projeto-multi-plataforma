@@ -35,33 +35,47 @@ export const Dashboard = {
           const temDesconto = priceFrom && Number(priceFrom) > Number(displayPrice);
 
           return `
-            <div class="border border-gray-100 rounded-lg bg-white mb-2 overflow-hidden shadow-sm mx-2 max-w-md md:max-w-full">
-              <div onclick="window.toggleAdminProduct('${prod.id}')" class="p-2.5 flex items-center justify-between bg-gray-50/70 cursor-pointer hover:bg-gray-50 transition-all duration-150">
-                <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div class="w-10 h-10 border border-gray-200 rounded-md overflow-hidden bg-white flex-shrink-0">
+            <div class="border border-gray-100 rounded-lg bg-white mb-2 overflow-hidden shadow-sm mx-1">
+              <div onclick="window.toggleAdminProduct('${prod.id}')" class="p-2 flex items-center justify-between bg-gray-50/50 cursor-pointer hover:bg-gray-50 transition-all duration-150">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <div class="w-10 h-10 border border-gray-200 rounded-lg overflow-hidden bg-white flex-shrink-0">
                     <img src="${prod.image_url || ''}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=80';" />
                   </div>
                   <div class="min-w-0 flex-1">
-                    <h4 class="text-xs font-bold text-gray-800 truncate">${prod.title}</h4>
-                    <p class="text-[10px] text-gray-500 mt-0.5">
-                      ${temDesconto ? `<span class="line-through mr-1 text-gray-400">R$ ${priceFrom}</span>` : ''}
-                      <span class="${temDesconto ? 'text-red-600 font-semibold' : 'text-gray-700'}">R$ ${displayPrice}</span>
-                      • <span class="bg-gray-100 px-1 py-0.5 rounded text-[9px] font-medium text-gray-600">${prod.categories?.name || 'Geral'}</span>
+                    <h4 class="text-[11px] font-black text-gray-800 truncate uppercase tracking-tight">${prod.title}</h4>
+                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">
+                      ${temDesconto ? `<span class="line-through mr-1 opacity-50">R$ ${priceFrom}</span>` : ''}
+                      <span class="${temDesconto ? 'text-red-600' : ''}">R$ ${displayPrice}</span>
                     </p>
                   </div>
                 </div>
                 <div class="flex items-center gap-2 ml-2">
-                  <span class="text-gray-400 text-[9px] font-bold px-1.5 py-0.5 bg-gray-100 rounded-md transition-all">${isExpanded ? '▲ Fechar' : '▼ Ver'}</span>
+                  <span class="text-gray-400 p-1 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>
+                  </span>
                 </div>
               </div>
 
-              <div class="${isExpanded ? 'block' : 'hidden'} p-3 border-t border-gray-100 bg-white text-xs">
-                <p class="text-gray-600 mb-3 leading-relaxed text-[11px] font-normal">${prod.description || 'Sem descrição cadastrada para este item.'}</p>
-                <div class="flex gap-2 justify-end pt-2 border-t border-gray-50">
-                  <button type="button" onclick="event.stopPropagation(); window.editAdminProduct('${prod.id}')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1">
+              <div class="${isExpanded ? 'block' : 'hidden'} p-3 border-t border-gray-100 bg-white">
+                <div class="space-y-3">
+                    <div>
+                        <h5 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Descrição</h5>
+                        <p class="text-gray-600 leading-relaxed text-[11px]">${prod.description || 'Sem descrição.'}</p>
+                    </div>
+                    ${prod.colors && prod.colors.length > 0 ? `
+                        <div>
+                            <h5 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Cores</h5>
+                            <div class="flex flex-wrap gap-1">
+                                ${prod.colors.map(c => `<span class="bg-gray-100 px-1.5 py-0.5 rounded text-[9px] font-bold text-gray-600 uppercase">${c}</span>`).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="flex gap-2 justify-end pt-3 mt-3 border-t border-gray-50">
+                  <button type="button" onclick="event.stopPropagation(); window.editAdminProduct('${prod.id}')" class="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1">
                     ✏️ Editar
                   </button>
-                  <button type="button" onclick="event.stopPropagation(); window.deleteAdminProduct('${prod.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1">
+                  <button type="button" onclick="event.stopPropagation(); window.deleteAdminProduct('${prod.id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1">
                     🗑️ Excluir
                   </button>
                 </div>
@@ -72,46 +86,40 @@ export const Dashboard = {
       };
 
       return `
-        <div class="min-h-screen bg-gray-50 p-4 md:p-8">
-          <div class="max-w-7xl mx-auto space-y-8">
+        <div class="min-h-screen bg-gray-50 p-3 md:p-8">
+          <div class="max-w-7xl mx-auto space-y-6 md:space-y-8">
 
             <!-- CABEÇALHO ADMIN -->
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
               <div>
                 <div class="flex items-center gap-3 mb-1">
-                  <h1 class="text-2xl font-black text-gray-900 tracking-tight">Painel de Controle</h1>
+                  <h1 class="text-xl md:text-2xl font-black text-gray-900 tracking-tight">Painel Administrativo</h1>
                   ${isConfigured
-                    ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-600">● Loja Online</span>`
-                    : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-600">● Pendente</span>`
+                    ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-green-100 text-green-600">Online</span>`
+                    : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-yellow-100 text-yellow-600">Pendente</span>`
                   }
                 </div>
-                <p class="text-sm text-gray-500 font-medium">Gerenciando: <span class="text-gray-900">${tenant.store_name || 'Nova Loja'}</span></p>
+                <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Loja: <span class="text-gray-900">${tenant.store_name || 'Nova Loja'}</span></p>
               </div>
-              <div class="flex items-center gap-3 w-full md:w-auto">
-                <a href="/" class="flex-grow md:flex-grow-0 text-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-6 py-3 rounded-2xl text-sm transition">
-                  Ver Vitrine
-                </a>
-              </div>
+              <a href="/" class="w-full md:w-auto text-center bg-gray-900 hover:bg-black text-white font-black px-6 py-3 rounded-2xl text-[10px] uppercase tracking-widest transition shadow-lg">
+                Ver Minha Vitrine
+              </a>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
 
-              <!-- COLUNA ESQUERDA -->
-              <div class="lg:col-span-5 space-y-8">
-                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div class="p-6 border-b border-gray-50 bg-gray-50/50">
-                    <h3 class="font-black text-gray-900 text-lg">Configurações da Loja</h3>
+              <!-- COLUNA ESQUERDA: CONFIGS -->
+              <div class="lg:col-span-5 space-y-6 md:space-y-8">
+                <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+                  <div class="p-6 border-b border-gray-50 bg-gray-50/30">
+                    <h3 class="font-black text-gray-900 text-base uppercase tracking-tight">Configurações Gerais</h3>
                   </div>
 
-                  <form id="admin-tenant-form" class="p-6 space-y-8">
+                  <form id="admin-tenant-form" class="p-6 space-y-6">
                     <div class="space-y-4">
-                      <div class="flex items-center gap-2 mb-2">
-                        <div class="w-1 h-4 bg-lojaPrimaria rounded-full"></div>
-                        <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest">🌐 Identidade Visual</h4>
-                      </div>
                       <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome da Marca</label>
-                        <input type="text" id="conf-name" value="${tenant.store_name || ''}" required class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-lojaPrimaria transition" />
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5">Nome da Loja</label>
+                        <input type="text" id="conf-name" value="${tenant.store_name || ''}" required class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-lojaPrimaria transition" />
                       </div>
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         ${ImageUpload.render('logo', tenant.logo_url, 'Logotipo')}
@@ -119,121 +127,141 @@ export const Dashboard = {
                       </div>
                       <div class="grid grid-cols-2 gap-4">
                         <div>
-                          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cor Primária</label>
+                          <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5">Cor Primária</label>
                           <div class="flex items-center gap-2 bg-gray-50 rounded-xl p-1 pr-3">
                             <input type="color" id="conf-primary" value="${tenant.primary_color || '#3b82f6'}" class="w-10 h-10 rounded-lg border-none bg-transparent cursor-pointer" />
-                            <span class="text-xs font-mono font-bold text-gray-600">${tenant.primary_color || '#3b82f6'}</span>
+                            <span class="text-[10px] font-mono font-black text-gray-500 uppercase">${tenant.primary_color || '#3b82f6'}</span>
                           </div>
                         </div>
                         <div>
-                          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cor Secundária</label>
+                          <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5">Cor Secundária</label>
                           <div class="flex items-center gap-2 bg-gray-50 rounded-xl p-1 pr-3">
                             <input type="color" id="conf-secondary" value="${tenant.secondary_color || '#1e3a8a'}" class="w-10 h-10 rounded-lg border-none bg-transparent cursor-pointer" />
-                            <span class="text-xs font-mono font-bold text-gray-600">${tenant.secondary_color || '#1e3a8a'}</span>
+                            <span class="text-[10px] font-mono font-black text-gray-500 uppercase">${tenant.secondary_color || '#1e3a8a'}</span>
                           </div>
                         </div>
                       </div>
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Instagram URL</label>
-                           <input type="text" id="conf-instagram" value="${tenant.instagram_url || ''}" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm" placeholder="https://instagram.com/sualoja" />
+                           <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5">Instagram (URL)</label>
+                           <input type="text" id="conf-instagram" value="${tenant.instagram_url || ''}" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold" />
                         </div>
                         <div>
-                           <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Facebook URL</label>
-                           <input type="text" id="conf-facebook" value="${tenant.facebook_url || ''}" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm" placeholder="https://facebook.com/sualoja" />
+                           <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5">Facebook (URL)</label>
+                           <input type="text" id="conf-facebook" value="${tenant.facebook_url || ''}" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold" />
                         </div>
                       </div>
                     </div>
 
                     <div class="space-y-4 pt-4 border-t border-gray-50">
-                      <div class="flex items-center gap-2 mb-2">
-                        <div class="w-1 h-4 bg-lojaPrimaria rounded-full"></div>
-                        <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest">📞 Canais e Logística</h4>
+                      <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5">WhatsApp (Receber Pedidos)</label>
+                        <input type="text" id="conf-phone" value="${tenant.whatsapp_number || ''}" required class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold" placeholder="5511999999999" />
                       </div>
                       <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">WhatsApp</label>
-                        <input type="text" id="conf-phone" value="${tenant.whatsapp_number || ''}" required class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-lojaPrimaria transition" placeholder="5511999999999" />
-                      </div>
-                      <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">📍 Endereço</label>
-                        <input type="text" id="conf-address" value="${tenant.address || ''}" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-lojaPrimaria transition" />
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5">Endereço Físico</label>
+                        <input type="text" id="conf-address" value="${tenant.address || ''}" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold" />
                       </div>
                     </div>
 
-                    <button type="submit" id="btn-save-tenant" class="w-full bg-lojaPrimaria text-white font-black py-4 rounded-2xl shadow-lg shadow-lojaPrimaria/20 hover:scale-[1.01] active:scale-[0.99] transition flex items-center justify-center gap-2">
-                      <span id="btn-save-text">Salvar Configurações</span>
+                    <button type="submit" id="btn-save-tenant" class="w-full bg-lojaPrimaria text-white font-black py-4 rounded-2xl shadow-lg shadow-lojaPrimaria/20 hover:scale-[1.01] active:scale-[0.99] transition flex items-center justify-center gap-2 uppercase text-xs tracking-widest">
+                      <span id="btn-save-text">Salvar Alterações</span>
                       <div id="btn-save-loader" class="hidden animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
                     </button>
                   </form>
                 </div>
 
-                <!-- GERENCIAMENTO DE CATEGORIAS -->
-                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-4">
-                   <h3 class="font-black text-gray-900 text-lg">Gerenciar Categorias</h3>
+                <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 space-y-4">
+                   <h3 class="font-black text-gray-900 text-base uppercase tracking-tight">Categorias</h3>
                    <div class="space-y-2 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
                       ${categories.map(cat => `
-                        <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100">
-                           <span class="text-sm font-bold text-gray-700">${cat.name}</span>
-                           <button onclick="window.deleteCategory('${cat.id}')" class="text-red-400 hover:text-red-600 transition p-1">🗑️</button>
+                        <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100 group">
+                           <span class="text-xs font-black text-gray-600 uppercase tracking-widest">${cat.name}</span>
+                           <button onclick="window.deleteCategory('${cat.id}')" class="text-red-300 hover:text-red-500 transition p-1 hover:bg-red-50 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                           </button>
                         </div>
                       `).join('')}
                    </div>
                 </div>
               </div>
 
-              <!-- COLUNA DIREITA -->
-              <div class="lg:col-span-7 space-y-8">
-                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-6">
-                  <h3 class="font-black text-gray-900 text-lg" id="product-form-title">Cadastrar Produto</h3>
+              <!-- COLUNA DIREITA: PRODUTOS -->
+              <div class="lg:col-span-7 space-y-6 md:space-y-8">
+                <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 space-y-6">
+                  <h3 class="font-black text-gray-900 text-base uppercase tracking-tight" id="product-form-title">Cadastrar Novo Produto</h3>
                   <form id="admin-product-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <input type="hidden" id="prod-id" value="" />
                     <div class="space-y-4">
-                      <input type="text" id="prod-title" required class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm" placeholder="Título" />
-                      <div class="flex gap-2">
-                        <select id="prod-category" required class="flex-grow bg-gray-50 border-none rounded-xl p-3 text-sm">
-                          <option value="" disabled selected>Categoria...</option>
-                          ${categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
-                          <option value="new">+ Criar Nova</option>
-                        </select>
-                        <input type="text" id="new-category-name" class="hidden flex-grow bg-blue-50 border border-blue-100 rounded-xl p-3 text-sm" placeholder="Nome da Categoria" />
+                      <div>
+                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5">Título do Produto</label>
+                         <input type="text" id="prod-title" required class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold" />
                       </div>
-                      <textarea id="prod-description" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm h-28" placeholder="Descrição"></textarea>
+                      <div class="flex gap-2">
+                        <div class="flex-1">
+                             <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5">Categoria</label>
+                             <select id="prod-category" required class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold">
+                                <option value="" disabled selected>Selecionar...</option>
+                                ${categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                                <option value="new">+ Criar Nova</option>
+                             </select>
+                        </div>
+                        <input type="text" id="new-category-name" class="hidden flex-grow bg-blue-50 border border-blue-100 rounded-xl p-3 text-sm font-bold mt-5" placeholder="Nome" />
+                      </div>
+                      <div>
+                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5">Descrição Curta</label>
+                         <textarea id="prod-description" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold h-24" placeholder="Detalhes do item..."></textarea>
+                      </div>
                     </div>
                     <div class="space-y-4">
                       <div class="grid grid-cols-2 gap-4">
-                        <input type="number" step="0.01" id="prod-price" required class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm" placeholder="Preço" />
-                        <input type="number" step="0.01" id="prod-promo" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm" placeholder="Promoção" />
+                        <div>
+                           <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5">Preço (R$)</label>
+                           <input type="number" step="0.01" id="prod-price" required class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold" />
+                        </div>
+                        <div>
+                           <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5">Promo (R$)</label>
+                           <input type="number" step="0.01" id="prod-promo" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold" />
+                        </div>
                       </div>
-                      ${ImageUpload.render('prod', '', 'Imagem')}
-                      <input type="text" id="prod-attributes" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm" placeholder="Tamanhos (P, M, G)" />
+                      ${ImageUpload.render('prod', '', 'Foto do Produto')}
+                      <div>
+                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5">Cores (separadas por vírgula)</label>
+                         <input type="text" id="prod-colors" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold" placeholder="Preto, Branco, Azul" />
+                      </div>
+                      <div>
+                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1.5">Tamanhos (P, M, G)</label>
+                         <input type="text" id="prod-attributes" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm font-bold" />
+                      </div>
                     </div>
-                    <button type="submit" id="btn-prod-submit" class="md:col-span-2 bg-green-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-green-700 transition">Adicionar ao Catálogo</button>
+                    <button type="submit" id="btn-prod-submit" class="md:col-span-2 bg-green-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-green-700 transition uppercase text-xs tracking-widest">
+                       Adicionar ao Catálogo
+                    </button>
                   </form>
                 </div>
 
-                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-6">
-                  <h3 class="font-black text-gray-900 text-lg">Produtos</h3>
+                <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 space-y-6">
+                  <h3 class="font-black text-gray-900 text-base uppercase tracking-tight">Catálogo</h3>
                   <div class="grid grid-cols-1 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin" id="admin-product-list">
                     ${renderAdminProductList(products, window.currentExpandedId)}
                   </div>
                 </div>
 
-                <!-- PEDIDOS RECENTES (Recuperado) -->
-                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-6">
-                  <h3 class="font-black text-gray-900 text-lg">Pedidos Recentes</h3>
+                <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 space-y-6">
+                  <h3 class="font-black text-gray-900 text-base uppercase tracking-tight">Pedidos Recentes</h3>
                   <div class="space-y-3">
                     ${orders.map(order => `
                       <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex justify-between items-center">
                         <div>
-                          <p class="text-xs font-black text-gray-900 uppercase tracking-tight">${order.customer_name}</p>
-                          <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">${order.payment_method} • ${formatCurrency(order.total_amount)}</p>
+                          <p class="text-[11px] font-black text-gray-900 uppercase tracking-tight">${order.customer_name}</p>
+                          <p class="text-[9px] text-gray-500 font-bold uppercase tracking-widest">${order.payment_method} • ${formatCurrency(order.total_amount)}</p>
                         </div>
-                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${order.status === 'pending' ? 'bg-yellow-100 text-yellow-600' : 'bg-green-100 text-green-600'}">
+                        <span class="px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${order.status === 'pending' ? 'bg-yellow-100 text-yellow-600' : 'bg-green-100 text-green-600'}">
                           ${order.status}
                         </span>
                       </div>
                     `).join('')}
-                    ${orders.length === 0 ? '<p class="text-center text-gray-400 text-xs py-8">Nenhum pedido recebido ainda.</p>' : ''}
+                    ${orders.length === 0 ? '<p class="text-center text-gray-400 text-[10px] font-bold uppercase tracking-widest py-8">Nenhum pedido</p>' : ''}
                   </div>
                 </div>
               </div>
@@ -242,33 +270,21 @@ export const Dashboard = {
         </div>
 
         <div id="delete-modal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 hidden">
-          <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-          <div class="bg-white w-full max-w-sm rounded-3xl p-8 relative">
+          <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 relative shadow-2xl animate-in fade-in zoom-in duration-200">
             <h3 class="text-center text-xl font-black text-gray-900 mb-2">Confirmar Exclusão</h3>
-            <p class="text-center text-gray-500 text-sm mb-2">Deseja excluir <span id="delete-item-name" class="font-bold text-gray-900"></span>?</p>
-            <p class="text-center text-red-500 text-[10px] font-bold uppercase tracking-widest mb-8">Esta ação não poderá ser desfeita.</p>
+            <p class="text-center text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Deseja excluir <span id="delete-item-name" class="text-red-500"></span>?</p>
+            <p class="text-center text-red-500 text-[9px] font-black uppercase tracking-[0.2em] mb-8 opacity-50">Esta ação é irreversível</p>
             <div class="grid grid-cols-2 gap-4">
-              <button id="btn-cancel-delete" class="bg-gray-100 text-gray-700 font-bold py-3 rounded-2xl hover:bg-gray-200 transition">Cancelar</button>
-              <button id="btn-confirm-delete" class="bg-red-500 text-white font-bold py-3 rounded-2xl hover:bg-red-600 transition">Excluir</button>
+              <button id="btn-cancel-delete" class="bg-gray-100 text-gray-600 font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest hover:bg-gray-200 transition">Cancelar</button>
+              <button id="btn-confirm-delete" class="bg-red-500 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest hover:bg-red-600 transition shadow-lg shadow-red-500/20">Sim, Excluir</button>
             </div>
           </div>
         </div>
       `;
     } catch (err) {
       console.error("FALHA CRÍTICA NO DASHBOARD:", err);
-      return `
-        <div class="min-h-screen flex items-center justify-center bg-red-50 p-6">
-           <div class="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center space-y-4">
-              <div class="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto">
-                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-              </div>
-              <h2 class="text-2xl font-black text-gray-900">Erro de Conexão</h2>
-              <p class="text-gray-500 text-sm">Não foi possível carregar os dados do Supabase. Verifique sua conexão e as políticas de RLS.</p>
-              <pre class="bg-gray-50 p-3 rounded-xl text-[10px] text-red-400 text-left overflow-x-auto">${err.message}</pre>
-              <button onclick="window.location.reload()" class="w-full bg-gray-900 text-white font-bold py-3 rounded-2xl transition hover:bg-black">Tentar Novamente</button>
-           </div>
-        </div>
-      `;
+      return `<div class="p-20 text-center font-black uppercase text-red-500">Erro de Conexão</div>`;
     }
   },
 
@@ -278,9 +294,9 @@ export const Dashboard = {
     const categorySelect = container.querySelector('#prod-category');
     const newCategoryInput = container.querySelector('#new-category-name');
 
-    ImageUpload.bindEvents('logo');
-    ImageUpload.bindEvents('hero');
-    ImageUpload.bindEvents('prod');
+    ImageUpload.bindEvents('logo', (url) => { if(!url) container.querySelector('#url-logo').value = ''; });
+    ImageUpload.bindEvents('hero', (url) => { if(!url) container.querySelector('#url-hero').value = ''; });
+    ImageUpload.bindEvents('prod', (url) => { if(!url) container.querySelector('#url-prod').value = ''; });
 
     if (categorySelect) {
       categorySelect.onchange = () => {
@@ -350,9 +366,7 @@ export const Dashboard = {
     const btnConfirmDelete = container.querySelector('#btn-confirm-delete');
     let itemToDelete = null;
 
-    // Vinculação de Controle e Correção da Lógica de Fechamento do Accordion:
     window.toggleAdminProduct = (id) => {
-      // Se clicar no mesmo ID que já está aberto, define como null para fechar
       window.currentExpandedId = window.currentExpandedId === id ? null : id;
       if (typeof onRefresh === 'function') onRefresh();
     };
@@ -365,7 +379,7 @@ export const Dashboard = {
     };
 
     window.deleteCategory = async (id) => {
-       if (confirm('Deseja realmente excluir esta categoria? Os produtos atrelados ficarão sem categoria.')) {
+       if (confirm('Deseja realmente excluir esta categoria?')) {
           const { error } = await supabase.from('categories').delete().eq('id', id);
           if (error) alert("Erro ao excluir: " + error.message);
           else onRefresh();
@@ -382,7 +396,7 @@ export const Dashboard = {
     window.editAdminProduct = async (id) => {
       const { data: prod } = await supabase.from('products').select('*').eq('id', id).single();
       if (prod) {
-        container.querySelector('#product-form-title').innerText = 'Editar Produto';
+        container.querySelector('#product-form-title').innerText = 'Editando: ' + prod.title;
         container.querySelector('#btn-prod-submit').innerText = 'Salvar Alterações';
         container.querySelector('#prod-id').value = prod.id;
         container.querySelector('#prod-title').value = prod.title;
@@ -390,13 +404,16 @@ export const Dashboard = {
         container.querySelector('#prod-description').value = prod.description || '';
         container.querySelector('#prod-price').value = prod.price;
         container.querySelector('#prod-promo').value = prod.promo_price || '';
+        container.querySelector('#prod-colors').value = Array.isArray(prod.colors) ? prod.colors.join(', ') : '';
         container.querySelector('#prod-attributes').value = Array.isArray(prod.attributes) ? prod.attributes.join(', ') : '';
 
-        // Trigger image preview update
         const urlProd = container.querySelector('#url-prod');
         urlProd.value = prod.image_url || '';
         const previewContainer = container.querySelector('#container-prod').querySelector('.relative');
-        if (previewContainer) {
+        const removeBtn = container.querySelector('#remove-prod');
+
+        if (prod.image_url) {
+            if (removeBtn) removeBtn.classList.replace('hidden', 'flex');
             previewContainer.innerHTML = `
                 <img src="${prod.image_url}" id="preview-prod" class="w-full h-full object-cover" />
                 <div id="loading-prod" class="absolute inset-0 bg-white/80 items-center justify-center hidden">
@@ -434,6 +451,7 @@ export const Dashboard = {
             price: parseFloat(priceVal),
             promo_price: promoVal ? parseFloat(promoVal) : null,
             image_url: container.querySelector('#url-prod').value,
+            colors: container.querySelector('#prod-colors').value.split(',').map(s => s.trim()).filter(s => s),
             attributes: container.querySelector('#prod-attributes').value.split(',').map(s => s.trim()).filter(s => s)
           };
 
@@ -448,14 +466,14 @@ export const Dashboard = {
 
           if (error) throw error;
 
-          // Reset form after save
           productForm.reset();
           container.querySelector('#prod-id').value = '';
-          container.querySelector('#product-form-title').innerText = 'Cadastrar Produto';
+          container.querySelector('#product-form-title').innerText = 'Cadastrar Novo Produto';
           container.querySelector('#btn-prod-submit').innerText = 'Adicionar ao Catálogo';
 
-          // Reset Image Preview
           const previewContainer = container.querySelector('#container-prod').querySelector('.relative');
+          const removeBtn = container.querySelector('#remove-prod');
+          if (removeBtn) removeBtn.classList.replace('flex', 'hidden');
           previewContainer.innerHTML = `
               <div id="placeholder-prod" class="text-gray-300">
                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
