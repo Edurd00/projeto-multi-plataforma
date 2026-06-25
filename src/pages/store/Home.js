@@ -123,7 +123,12 @@ export const Home = {
     return filtered.map(prod => `
       <div class="js-product-card group bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 cursor-pointer" data-id="${prod.id}">
         <div class="relative aspect-square w-full overflow-hidden bg-gray-50">
-          <img src="${prod.image_url || ''}" onerror="this.src='${placeholderImg}'; this.className='absolute inset-0 m-auto w-1/3 h-1/3 opacity-20';" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="${prod.title}" />
+          <img
+            src="${prod.image_url || ''}"
+            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            alt="${prod.title}"
+            onError="this.onerror=null; this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500';"
+          />
         </div>
         <div class="p-6 space-y-4">
           <div>

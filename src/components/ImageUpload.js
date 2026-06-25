@@ -56,14 +56,12 @@ export const ImageUpload = {
           const fileName = `${Math.random()}.${fileExt}`;
           const filePath = `uploads/${fileName}`;
 
-          // Corrigido para o bucket correto 'loja'
           const { error: uploadError } = await supabase.storage
             .from('loja')
             .upload(filePath, file);
 
           if (uploadError) throw uploadError;
 
-          // Corrigido para obter a URL pública do bucket 'loja'
           const { data: { publicUrl } } = supabase.storage
             .from('loja')
             .getPublicUrl(filePath);
