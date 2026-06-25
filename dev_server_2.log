@@ -8,3 +8,5 @@
   ➜  Local:   http://localhost:5173/
   ➜  Network: use --host to expose
 6:11:04 PM [vite] page reload src/pages/store/Home.js
+6:19:51 PM [vite] page reload src/pages/admin/Dashboard.js
+6:20:27 PM [vite] page reload src/pages/store/Home.js

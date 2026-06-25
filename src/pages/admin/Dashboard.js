@@ -20,13 +20,16 @@ export const Dashboard = {
       const products = productsRes.data || [];
       const categories = categoriesRes.data || [];
       const tenant = tenantRes.data || {};
+      const orders = ordersRes.data || [];
 
       const isConfigured = tenant.store_name && tenant.logo_url && tenant.whatsapp_number;
+
+      const formatCurrency = (value) =>
+        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
       const renderAdminProductList = (products, expandedId = null) => {
         return products.map(prod => {
           const isExpanded = prod.id === expandedId;
-          // Mapping schema to requested template: name -> title, price -> (promo_price || price), price_from -> price (if promo exists)
           const displayPrice = prod.promo_price || prod.price;
           const priceFrom = prod.promo_price ? prod.price : null;
           const temDesconto = priceFrom && Number(priceFrom) > Number(displayPrice);
@@ -171,7 +174,7 @@ export const Dashboard = {
                       ${categories.map(cat => `
                         <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100">
                            <span class="text-sm font-bold text-gray-700">${cat.name}</span>
-                           <button onclick="window.deleteCategory('${cat.id}')" class="text-red-400 hover:text-red-600 transition">🗑️</button>
+                           <button onclick="window.deleteCategory('${cat.id}')" class="text-red-400 hover:text-red-600 transition p-1">🗑️</button>
                         </div>
                       `).join('')}
                    </div>
@@ -204,7 +207,7 @@ export const Dashboard = {
                       ${ImageUpload.render('prod', '', 'Imagem')}
                       <input type="text" id="prod-attributes" class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm" placeholder="Tamanhos (P, M, G)" />
                     </div>
-                    <button type="submit" class="md:col-span-2 bg-green-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-green-700 transition">Adicionar ao Catálogo</button>
+                    <button type="submit" id="btn-prod-submit" class="md:col-span-2 bg-green-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-green-700 transition">Adicionar ao Catálogo</button>
                   </form>
                 </div>
 
@@ -212,6 +215,25 @@ export const Dashboard = {
                   <h3 class="font-black text-gray-900 text-lg">Produtos</h3>
                   <div class="grid grid-cols-1 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin" id="admin-product-list">
                     ${renderAdminProductList(products, window.currentExpandedId)}
+                  </div>
+                </div>
+
+                <!-- PEDIDOS RECENTES (Recuperado) -->
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-6">
+                  <h3 class="font-black text-gray-900 text-lg">Pedidos Recentes</h3>
+                  <div class="space-y-3">
+                    ${orders.map(order => `
+                      <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex justify-between items-center">
+                        <div>
+                          <p class="text-xs font-black text-gray-900 uppercase tracking-tight">${order.customer_name}</p>
+                          <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest">${order.payment_method} • ${formatCurrency(order.total_amount)}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${order.status === 'pending' ? 'bg-yellow-100 text-yellow-600' : 'bg-green-100 text-green-600'}">
+                          ${order.status}
+                        </span>
+                      </div>
+                    `).join('')}
+                    ${orders.length === 0 ? '<p class="text-center text-gray-400 text-xs py-8">Nenhum pedido recebido ainda.</p>' : ''}
                   </div>
                 </div>
               </div>
@@ -332,11 +354,8 @@ export const Dashboard = {
     window.toggleAdminProduct = (id) => {
       // Se clicar no mesmo ID que já está aberto, define como null para fechar
       window.currentExpandedId = window.currentExpandedId === id ? null : id;
-      // Chame a sua função interna de renderização do painel passando o window.currentExpandedId atualizado
       if (typeof onRefresh === 'function') onRefresh();
     };
-
-    window.atualizarListaProdutosAdmin = () => onRefresh();
 
     window.deleteAdminProduct = async (id) => {
       const { data: prod } = await supabase.from('products').select('title').eq('id', id).single();
@@ -364,9 +383,10 @@ export const Dashboard = {
       const { data: prod } = await supabase.from('products').select('*').eq('id', id).single();
       if (prod) {
         container.querySelector('#product-form-title').innerText = 'Editar Produto';
+        container.querySelector('#btn-prod-submit').innerText = 'Salvar Alterações';
         container.querySelector('#prod-id').value = prod.id;
         container.querySelector('#prod-title').value = prod.title;
-        container.querySelector('#prod-category').value = prod.category_id;
+        container.querySelector('#prod-category').value = prod.category_id || '';
         container.querySelector('#prod-description').value = prod.description || '';
         container.querySelector('#prod-price').value = prod.price;
         container.querySelector('#prod-promo').value = prod.promo_price || '';
@@ -375,8 +395,15 @@ export const Dashboard = {
         // Trigger image preview update
         const urlProd = container.querySelector('#url-prod');
         urlProd.value = prod.image_url || '';
-        const previewProd = container.querySelector('#preview-prod');
-        if (previewProd) previewProd.src = prod.image_url || '';
+        const previewContainer = container.querySelector('#container-prod').querySelector('.relative');
+        if (previewContainer) {
+            previewContainer.innerHTML = `
+                <img src="${prod.image_url}" id="preview-prod" class="w-full h-full object-cover" />
+                <div id="loading-prod" class="absolute inset-0 bg-white/80 items-center justify-center hidden">
+                  <div class="animate-spin rounded-full h-5 w-5 border-2 border-lojaPrimaria border-t-transparent"></div>
+                </div>
+            `;
+        }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -402,7 +429,7 @@ export const Dashboard = {
 
           const payload = {
             title: container.querySelector('#prod-title').value,
-            category_id: categoryId,
+            category_id: categoryId || null,
             description: container.querySelector('#prod-description').value,
             price: parseFloat(priceVal),
             promo_price: promoVal ? parseFloat(promoVal) : null,
@@ -420,10 +447,26 @@ export const Dashboard = {
           }
 
           if (error) throw error;
+
           // Reset form after save
           productForm.reset();
           container.querySelector('#prod-id').value = '';
           container.querySelector('#product-form-title').innerText = 'Cadastrar Produto';
+          container.querySelector('#btn-prod-submit').innerText = 'Adicionar ao Catálogo';
+
+          // Reset Image Preview
+          const previewContainer = container.querySelector('#container-prod').querySelector('.relative');
+          previewContainer.innerHTML = `
+              <div id="placeholder-prod" class="text-gray-300">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                   </svg>
+              </div>
+              <div id="loading-prod" class="absolute inset-0 bg-white/80 items-center justify-center hidden">
+                <div class="animate-spin rounded-full h-5 w-5 border-2 border-lojaPrimaria border-t-transparent"></div>
+              </div>
+          `;
+
           onRefresh();
         } catch (err) {
           alert("Erro ao salvar produto: " + err.message);

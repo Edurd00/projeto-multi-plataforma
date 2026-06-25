@@ -30,21 +30,23 @@ export const Home = {
 
       return `
         <section class="relative w-full h-[400px] md:h-[500px] flex items-center justify-center text-center px-4" ${heroStyle}>
-          <div class="max-w-4xl mx-auto space-y-4 md:space-y-6 relative z-10 text-white drop-shadow-md">
+          <div class="max-w-4xl mx-auto space-y-4 md:space-y-6 relative z-10 text-white drop-shadow-2xl">
             <h2 class="text-4xl md:text-7xl font-black uppercase tracking-tight leading-none">${tenant.hero_title || 'Bem-vindo'}</h2>
             <p class="text-lg md:text-2xl font-medium opacity-90">${tenant.hero_subtitle || ''}</p>
           </div>
+          <!-- Overlay para garantir legibilidade se a imagem for clara -->
+          <div class="absolute inset-0 bg-black/20 pointer-events-none"></div>
         </section>
 
         <main class="max-w-7xl mx-auto px-4 py-8 md:py-12 space-y-8 md:space-y-16">
           <section class="flex gap-3 overflow-x-auto pb-4 scrollbar-none">
-            <button data-category-id="all" class="js-category-btn whitespace-nowrap px-6 py-3 rounded-full text-sm font-bold transition-all border ${!this.selectedCategoryId ? 'bg-lojaPrimaria text-white' : 'bg-white text-gray-600 border-gray-100'}">Todos</button>
+            <button data-category-id="all" class="js-category-btn whitespace-nowrap px-6 py-3 rounded-full text-sm font-bold transition-all border ${!this.selectedCategoryId ? 'bg-lojaPrimaria text-white shadow-lg shadow-lojaPrimaria/20 border-lojaPrimaria' : 'bg-white text-gray-600 border-gray-100 hover:border-gray-200'}">Todos</button>
             ${categories.map(cat => `
-              <button data-category-id="${cat.id}" class="js-category-btn whitespace-nowrap px-6 py-3 rounded-full text-sm font-bold transition-all border ${this.selectedCategoryId === cat.id ? 'bg-lojaPrimaria text-white' : 'bg-white text-gray-600 border-gray-100'}">${cat.name}</button>
+              <button data-category-id="${cat.id}" class="js-category-btn whitespace-nowrap px-6 py-3 rounded-full text-sm font-bold transition-all border ${this.selectedCategoryId === cat.id ? 'bg-lojaPrimaria text-white shadow-lg shadow-lojaPrimaria/20 border-lojaPrimaria' : 'bg-white text-gray-600 border-gray-100 hover:border-gray-200'}">${cat.name}</button>
             `).join('')}
           </section>
 
-          <section id="products-grid-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 px-2 md:px-0">
+          <section id="products-grid-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 px-1 md:px-0">
             ${this.renderProductsHTML(this.allProducts, formatCurrency)}
           </section>
         </main>
@@ -125,7 +127,9 @@ export const Home = {
     const filtered = this.selectedCategoryId ? products.filter(p => p.category_id === this.selectedCategoryId) : products;
 
     return filtered.map(prod => {
-      const temDesconto = prod.promo_price && Number(prod.price) > Number(prod.promo_price);
+      const displayPrice = prod.promo_price || prod.price;
+      const priceFrom = prod.promo_price ? prod.price : null;
+      const temDesconto = priceFrom && Number(priceFrom) > Number(displayPrice);
 
       return `
         <div class="js-product-card group bg-white rounded-xl md:rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100 flex flex-col h-full relative" data-id="${prod.id}">
@@ -145,8 +149,8 @@ export const Home = {
             <h3 class="font-semibold text-gray-800 text-[11px] md:text-sm line-clamp-2 mb-1 md:mb-2 flex-grow">${prod.title}</h3>
             <div class="flex flex-col md:flex-row md:items-baseline justify-between mt-auto pt-1 md:pt-2 gap-1">
               <div class="flex items-baseline gap-1 md:gap-1.5 flex-wrap">
-                ${temDesconto ? `<span class="text-[9px] md:text-xs text-gray-400 line-through">R$ ${prod.price}</span>` : ''}
-                <span class="text-sm md:text-base font-bold ${temDesconto ? 'text-red-600' : 'text-gray-900'}">${formatCurrency(prod.promo_price || prod.price)}</span>
+                ${temDesconto ? `<span class="text-[9px] md:text-xs text-gray-400 line-through">R$ ${priceFrom}</span>` : ''}
+                <span class="text-sm md:text-base font-bold ${temDesconto ? 'text-red-600' : 'text-gray-900'}">${formatCurrency(displayPrice)}</span>
               </div>
               <button class="js-quick-add w-full md:w-auto bg-lojaPrimaria text-white px-2 md:px-3 py-1.5 md:py-1.5 rounded-lg text-[10px] md:text-xs font-bold hover:opacity-90 transition">
                 Adicionar
@@ -166,11 +170,11 @@ export const Home = {
 
         // Update active state classes
         container.querySelectorAll('.js-category-btn').forEach(b => {
-          b.classList.remove('bg-lojaPrimaria', 'text-white');
+          b.classList.remove('bg-lojaPrimaria', 'text-white', 'shadow-lg', 'shadow-lojaPrimaria/20', 'border-lojaPrimaria');
           b.classList.add('bg-white', 'text-gray-600', 'border-gray-100');
         });
         btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-100');
-        btn.classList.add('bg-lojaPrimaria', 'text-white');
+        btn.classList.add('bg-lojaPrimaria', 'text-white', 'shadow-lg', 'shadow-lojaPrimaria/20', 'border-lojaPrimaria');
 
         container.querySelector('#products-grid-container').innerHTML = this.renderProductsHTML(this.allProducts, formatCurrency);
         this.bindCardEvents(container);
