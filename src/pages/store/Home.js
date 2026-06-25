@@ -118,30 +118,39 @@ export const Home = {
 
   renderProductsHTML(products, formatCurrency) {
     const filtered = this.selectedCategoryId ? products.filter(p => p.category_id === this.selectedCategoryId) : products;
-    const placeholderImg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`;
 
-    return filtered.map(prod => `
-      <div class="js-product-card group bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 cursor-pointer" data-id="${prod.id}">
-        <div class="relative aspect-square w-full overflow-hidden bg-gray-50">
-          <img
-            src="${prod.image_url || ''}"
-            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            alt="${prod.title}"
-            onError="this.onerror=null; this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500';"
-          />
-        </div>
-        <div class="p-6 space-y-4">
-          <div>
-            <span class="text-[10px] font-black text-lojaPrimaria uppercase tracking-widest">${prod.categories?.name || 'Geral'}</span>
-            <h4 class="text-lg font-black text-gray-900 leading-tight">${prod.title}</h4>
+    return filtered.map(prod => {
+      const temDesconto = prod.promo_price && Number(prod.price) > Number(prod.promo_price);
+
+      return `
+        <div class="js-product-card group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100 flex flex-col h-full relative" data-id="${prod.id}">
+
+          ${temDesconto ? `<span class="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-md z-10 shadow-sm animate-pulse">PROMO</span>` : ''}
+
+          <div class="aspect-square w-full overflow-hidden bg-gray-50 relative">
+            <img
+              src="${prod.image_url || ''}"
+              class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              alt="${prod.title || 'Produto'}"
+              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500';"
+            />
           </div>
-          <div class="flex items-center justify-between pt-4 border-t border-gray-50">
-            <span class="text-xl font-black text-gray-900">${formatCurrency(prod.promo_price || prod.price)}</span>
-            <button class="js-quick-add bg-gray-900 text-white p-3 rounded-2xl hover:bg-lojaPrimaria transition-all"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg></button>
+          <div class="p-4 flex flex-col flex-grow">
+            <span class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">${prod.categories?.name || 'Geral'}</span>
+            <h3 class="font-semibold text-gray-800 text-sm line-clamp-2 mb-2 flex-grow">${prod.title}</h3>
+            <div class="flex items-baseline justify-between mt-auto pt-2 gap-1 flex-wrap">
+              <div class="flex items-baseline gap-1.5">
+                ${temDesconto ? `<span class="text-xs text-gray-400 line-through">R$ ${prod.price}</span>` : ''}
+                <span class="text-base font-bold ${temDesconto ? 'text-red-600' : 'text-gray-900'}">${formatCurrency(prod.promo_price || prod.price)}</span>
+              </div>
+              <button class="js-quick-add bg-lojaPrimaria text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:opacity-90 transition">
+                Adicionar
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   },
 
   bindEvents(container) {

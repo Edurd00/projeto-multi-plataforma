@@ -120,8 +120,9 @@ export const Dashboard = {
               <!-- COLUNA DIREITA -->
               <div class="lg:col-span-7 space-y-8">
                 <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-6">
-                  <h3 class="font-black text-gray-900 text-lg">Cadastrar Produto</h3>
+                  <h3 class="font-black text-gray-900 text-lg" id="product-form-title">Cadastrar Produto</h3>
                   <form id="admin-product-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <input type="hidden" id="prod-id" value="" />
                     <div class="space-y-4">
                       <input type="text" id="prod-title" required class="w-full bg-gray-50 border-none rounded-xl p-3 text-sm" placeholder="Título" />
                       <div class="flex gap-2">
@@ -148,36 +149,42 @@ export const Dashboard = {
 
                 <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-6">
                   <h3 class="font-black text-gray-900 text-lg">Produtos</h3>
-                  <div class="grid grid-cols-1 gap-3 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin">
-                    ${products.map(prod => `
-                      <div class="p-3 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition">
-                        <details class="group">
-                          <summary class="flex items-center justify-between cursor-pointer list-none">
-                            <div class="flex items-center gap-4">
-                              <div class="w-12 h-12 bg-white rounded-xl overflow-hidden border border-gray-100">
-                                 <img src="${prod.image_url || ''}" onerror="this.src='${placeholderImg}'; this.className='p-3 opacity-20';" class="w-full h-full object-cover" />
+                  <div class="grid grid-cols-1 gap-3 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin" id="admin-product-list">
+                    ${products.map(prod => {
+                      const temDesconto = prod.promo_price && Number(prod.price) > Number(prod.promo_price);
+                      return `
+                        <div class="border border-gray-100 rounded-xl bg-white mb-2 overflow-hidden shadow-sm" data-prod-id="${prod.id}">
+                          <div class="p-3 flex items-center justify-between bg-gray-50/50 cursor-pointer hover:bg-gray-50 transition js-admin-toggle">
+                            <div class="flex items-center gap-3">
+                              <div class="relative w-10 h-10 border rounded-lg overflow-hidden bg-white">
+                                <img src="${prod.image_url}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=80';" />
                               </div>
                               <div>
-                                <h4 class="text-sm font-bold text-gray-800 line-clamp-1">${prod.title}</h4>
-                                <p class="text-[10px] font-black text-gray-400 uppercase">${prod.categories?.name || 'Geral'} • ${formatCurrency(prod.promo_price || prod.price)}</p>
+                                <h4 class="text-sm font-semibold text-gray-800">${prod.title}</h4>
+                                <p class="text-xs text-gray-500">
+                                  ${temDesconto ? `<span class="line-through mr-1 text-gray-400">R$ ${prod.price}</span>` : ''}
+                                  <span class="${temDesconto ? 'text-red-600 font-medium' : ''}">${formatCurrency(prod.promo_price || prod.price)}</span>
+                                  • ${prod.categories?.name || 'Geral'}
+                                </p>
                               </div>
                             </div>
-                            <div class="flex items-center gap-2">
-                               <span class="text-gray-400 transition-transform group-open:rotate-180"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></span>
-                               <button data-product-id="${prod.id}" data-product-title="${prod.title}" class="js-delete-product p-2 text-gray-400 hover:text-red-500 rounded-xl transition">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            <span class="text-gray-400 text-[10px] md:hidden font-black uppercase tracking-widest px-2 py-1 bg-gray-100 rounded-md">Expandir</span>
+                          </div>
+
+                          <div class="js-admin-details hidden md:block p-4 border-t border-gray-50 bg-white">
+                            <p class="text-xs text-gray-600 mb-3 leading-relaxed">${prod.description || 'Sem descrição cadastrada.'}</p>
+                            <div class="flex gap-2 justify-end pt-2 border-t border-gray-50">
+                              <button data-prod-id="${prod.id}" class="js-admin-edit flex items-center gap-1 bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-100 transition">
+                                ✏️ Editar
+                              </button>
+                              <button data-product-id="${prod.id}" data-product-title="${prod.title}" class="js-delete-product flex items-center gap-1 bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition">
+                                🗑️ Excluir
                               </button>
                             </div>
-                          </summary>
-                          <div class="mt-4 pt-4 border-t border-gray-100 text-xs text-gray-600 space-y-2">
-                             <p><strong>Descrição:</strong> ${prod.description || 'Sem descrição'}</p>
-                             <p><strong>Tamanhos:</strong> ${Array.isArray(prod.attributes) ? prod.attributes.join(', ') : 'Nenhum'}</p>
-                             <p><strong>Preço:</strong> ${formatCurrency(prod.price)}</p>
-                             ${prod.promo_price ? `<p class="text-red-500"><strong>Promoção:</strong> ${formatCurrency(prod.promo_price)}</p>` : ''}
                           </div>
-                        </details>
-                      </div>
-                    `).join('')}
+                        </div>
+                      `;
+                    }).join('')}
                   </div>
                 </div>
               </div>
@@ -309,11 +316,44 @@ export const Dashboard = {
       };
     });
 
+    container.querySelectorAll('.js-admin-toggle').forEach(toggle => {
+      toggle.onclick = () => {
+        const details = toggle.nextElementSibling;
+        details.classList.toggle('hidden');
+      };
+    });
+
+    container.querySelectorAll('.js-admin-edit').forEach(btn => {
+      btn.onclick = async () => {
+        const id = btn.dataset.prodId;
+        const { data: prod } = await supabase.from('products').select('*').eq('id', id).single();
+        if (prod) {
+          container.querySelector('#product-form-title').innerText = 'Editar Produto';
+          container.querySelector('#prod-id').value = prod.id;
+          container.querySelector('#prod-title').value = prod.title;
+          container.querySelector('#prod-category').value = prod.category_id;
+          container.querySelector('#prod-description').value = prod.description || '';
+          container.querySelector('#prod-price').value = prod.price;
+          container.querySelector('#prod-promo').value = prod.promo_price || '';
+          container.querySelector('#prod-attributes').value = Array.isArray(prod.attributes) ? prod.attributes.join(', ') : '';
+
+          // Trigger image preview update
+          const urlProd = container.querySelector('#url-prod');
+          urlProd.value = prod.image_url || '';
+          const previewProd = container.querySelector('#preview-prod');
+          if (previewProd) previewProd.src = prod.image_url || '';
+
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      };
+    });
+
     if (productForm) {
       productForm.onsubmit = async (e) => {
         e.preventDefault();
         try {
           let categoryId = categorySelect.value;
+          const prodId = container.querySelector('#prod-id').value;
 
           if (categoryId === 'new') {
             const catName = newCategoryInput.value;
@@ -336,7 +376,15 @@ export const Dashboard = {
             attributes: container.querySelector('#prod-attributes').value.split(',').map(s => s.trim()).filter(s => s)
           };
 
-          const { error } = await supabase.from('products').insert(payload);
+          let error;
+          if (prodId) {
+            const res = await supabase.from('products').update(payload).eq('id', prodId);
+            error = res.error;
+          } else {
+            const res = await supabase.from('products').insert(payload);
+            error = res.error;
+          }
+
           if (error) throw error;
           onRefresh();
         } catch (err) {
