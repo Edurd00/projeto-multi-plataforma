@@ -149,37 +149,35 @@ export const Dashboard = {
 
                 <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-6">
                   <h3 class="font-black text-gray-900 text-lg">Produtos</h3>
-                  <div class="grid grid-cols-1 gap-3 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin" id="admin-product-list">
+                  <div class="grid grid-cols-1 max-h-[600px] overflow-y-auto pr-2 scrollbar-thin" id="admin-product-list">
                     ${products.map(prod => {
                       const temDesconto = prod.promo_price && Number(prod.price) > Number(prod.promo_price);
+                      const isExpanded = false; // Initial state
+
                       return `
-                        <div class="border border-gray-100 rounded-xl bg-white mb-2 overflow-hidden shadow-sm" data-prod-id="${prod.id}">
-                          <div class="p-3 flex items-center justify-between bg-gray-50/50 cursor-pointer hover:bg-gray-50 transition js-admin-toggle">
-                            <div class="flex items-center gap-3">
-                              <div class="relative w-10 h-10 border rounded-lg overflow-hidden bg-white">
-                                <img src="${prod.image_url}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=80';" />
+                        <div class="border border-gray-100 rounded-lg bg-white mb-1.5 overflow-hidden shadow-sm mx-2">
+                          <div onclick="window.toggleAdminProduct('${prod.id}')" class="p-2 flex items-center justify-between bg-gray-50/50 cursor-pointer hover:bg-gray-50 transition-colors duration-150">
+                            <div class="flex items-center gap-2">
+                              <div class="w-8 h-8 border rounded-md overflow-hidden bg-white flex-shrink-0">
+                                <img src="${prod.image_url || ''}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=80';" />
                               </div>
-                              <div>
-                                <h4 class="text-sm font-semibold text-gray-800">${prod.title}</h4>
-                                <p class="text-xs text-gray-500">
+                              <div class="min-w-0">
+                                <h4 class="text-xs font-semibold text-gray-800 truncate max-w-[180px]">${prod.title}</h4>
+                                <p class="text-[10px] text-gray-500">
                                   ${temDesconto ? `<span class="line-through mr-1 text-gray-400">R$ ${prod.price}</span>` : ''}
                                   <span class="${temDesconto ? 'text-red-600 font-medium' : ''}">${formatCurrency(prod.promo_price || prod.price)}</span>
                                   • ${prod.categories?.name || 'Geral'}
                                 </p>
                               </div>
                             </div>
-                            <span class="text-gray-400 text-[10px] md:hidden font-black uppercase tracking-widest px-2 py-1 bg-gray-100 rounded-md">Expandir</span>
+                            <span id="label-${prod.id}" class="text-gray-400 text-[10px] md:hidden font-medium px-1.5 py-0.5 bg-gray-100 rounded">▼ Ver</span>
                           </div>
 
-                          <div class="js-admin-details hidden md:block p-4 border-t border-gray-50 bg-white">
-                            <p class="text-xs text-gray-600 mb-3 leading-relaxed">${prod.description || 'Sem descrição cadastrada.'}</p>
+                          <div id="details-${prod.id}" class="hidden md:block p-3 border-t border-gray-50 bg-white text-xs">
+                            <p class="text-gray-600 mb-2 leading-relaxed text-[11px]">${prod.description || 'Sem descrição.'}</p>
                             <div class="flex gap-2 justify-end pt-2 border-t border-gray-50">
-                              <button data-prod-id="${prod.id}" class="js-admin-edit flex items-center gap-1 bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-100 transition">
-                                ✏️ Editar
-                              </button>
-                              <button data-product-id="${prod.id}" data-product-title="${prod.title}" class="js-delete-product flex items-center gap-1 bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition">
-                                🗑️ Excluir
-                              </button>
+                              <button onclick="window.editAdminProduct('${prod.id}')" class="bg-blue-50 text-blue-600 px-2.5 py-1 rounded-md font-bold hover:bg-blue-100 transition">✏️ Editar</button>
+                              <button onclick="window.deleteAdminProduct('${prod.id}', '${prod.title}')" class="bg-red-50 text-red-600 px-2.5 py-1 rounded-md font-bold hover:bg-red-100 transition">🗑️ Excluir</button>
                             </div>
                           </div>
                         </div>
@@ -299,6 +297,21 @@ export const Dashboard = {
     const btnConfirmDelete = container.querySelector('#btn-confirm-delete');
     let itemToDelete = null;
 
+    window.toggleAdminProduct = (id) => {
+      const el = container.querySelector(`#details-${id}`);
+      const label = container.querySelector(`#label-${id}`);
+      if (el) {
+        const isHidden = el.classList.toggle('hidden');
+        if (label) label.innerText = isHidden ? '▼ Ver' : '▲ Sobe';
+      }
+    };
+
+    window.deleteAdminProduct = (id, title) => {
+      itemToDelete = id;
+      deleteItemName.innerText = title;
+      deleteModal.classList.remove('hidden');
+    };
+
     btnCancelDelete.onclick = () => deleteModal.classList.add('hidden');
     btnConfirmDelete.onclick = async () => {
       await supabase.from('products').delete().eq('id', itemToDelete);
@@ -306,47 +319,27 @@ export const Dashboard = {
       onRefresh();
     };
 
-    container.querySelectorAll('.js-delete-product').forEach(btn => {
-      btn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        itemToDelete = btn.dataset.productId;
-        deleteItemName.innerText = btn.dataset.productTitle;
-        deleteModal.classList.remove('hidden');
-      };
-    });
+    window.editAdminProduct = async (id) => {
+      const { data: prod } = await supabase.from('products').select('*').eq('id', id).single();
+      if (prod) {
+        container.querySelector('#product-form-title').innerText = 'Editar Produto';
+        container.querySelector('#prod-id').value = prod.id;
+        container.querySelector('#prod-title').value = prod.title;
+        container.querySelector('#prod-category').value = prod.category_id;
+        container.querySelector('#prod-description').value = prod.description || '';
+        container.querySelector('#prod-price').value = prod.price;
+        container.querySelector('#prod-promo').value = prod.promo_price || '';
+        container.querySelector('#prod-attributes').value = Array.isArray(prod.attributes) ? prod.attributes.join(', ') : '';
 
-    container.querySelectorAll('.js-admin-toggle').forEach(toggle => {
-      toggle.onclick = () => {
-        const details = toggle.nextElementSibling;
-        details.classList.toggle('hidden');
-      };
-    });
+        // Trigger image preview update
+        const urlProd = container.querySelector('#url-prod');
+        urlProd.value = prod.image_url || '';
+        const previewProd = container.querySelector('#preview-prod');
+        if (previewProd) previewProd.src = prod.image_url || '';
 
-    container.querySelectorAll('.js-admin-edit').forEach(btn => {
-      btn.onclick = async () => {
-        const id = btn.dataset.prodId;
-        const { data: prod } = await supabase.from('products').select('*').eq('id', id).single();
-        if (prod) {
-          container.querySelector('#product-form-title').innerText = 'Editar Produto';
-          container.querySelector('#prod-id').value = prod.id;
-          container.querySelector('#prod-title').value = prod.title;
-          container.querySelector('#prod-category').value = prod.category_id;
-          container.querySelector('#prod-description').value = prod.description || '';
-          container.querySelector('#prod-price').value = prod.price;
-          container.querySelector('#prod-promo').value = prod.promo_price || '';
-          container.querySelector('#prod-attributes').value = Array.isArray(prod.attributes) ? prod.attributes.join(', ') : '';
-
-          // Trigger image preview update
-          const urlProd = container.querySelector('#url-prod');
-          urlProd.value = prod.image_url || '';
-          const previewProd = container.querySelector('#preview-prod');
-          if (previewProd) previewProd.src = prod.image_url || '';
-
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-      };
-    });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
 
     if (productForm) {
       productForm.onsubmit = async (e) => {

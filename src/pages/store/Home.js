@@ -158,6 +158,15 @@ export const Home = {
     container.querySelectorAll('.js-category-btn').forEach(btn => {
       btn.onclick = () => {
         this.selectedCategoryId = btn.dataset.categoryId === 'all' ? null : btn.dataset.categoryId;
+
+        // Update active state classes
+        container.querySelectorAll('.js-category-btn').forEach(b => {
+          b.classList.remove('bg-lojaPrimaria', 'text-white');
+          b.classList.add('bg-white', 'text-gray-600', 'border-gray-100');
+        });
+        btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-100');
+        btn.classList.add('bg-lojaPrimaria', 'text-white');
+
         container.querySelector('#products-grid-container').innerHTML = this.renderProductsHTML(this.allProducts, formatCurrency);
         this.bindCardEvents(container);
       };
