@@ -3,6 +3,7 @@ import { ProductDetailsModal } from '../../components/product/ProductDetailsModa
 
 export const Home = {
   selectedCategoryId: null,
+  searchQuery: '',
   allProducts: [],
 
   async render() {
@@ -36,15 +37,34 @@ export const Home = {
         </div>
       </section>
 
-      <main class="max-w-7xl mx-auto px-4 py-12 space-y-16">
-        <section class="flex gap-3 overflow-x-auto pb-4 scrollbar-none">
-          <button data-category-id="all" class="js-category-btn px-6 py-3 rounded-full text-sm font-bold transition-all border ${!this.selectedCategoryId ? 'bg-lojaPrimaria text-white' : 'bg-white text-gray-600 border-gray-100'}">Todos</button>
-          ${categories.map(cat => `
-            <button data-category-id="${cat.id}" class="js-category-btn px-6 py-3 rounded-full text-sm font-bold transition-all border ${this.selectedCategoryId === cat.id ? 'bg-lojaPrimaria text-white' : 'bg-white text-gray-600 border-gray-100'}">${cat.name}</button>
-          `).join('')}
+      <main class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+        <!-- BARRA DE PESQUISA -->
+        <section class="relative max-w-2xl mx-auto">
+          <div class="relative group">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="O que você está procurando hoje?"
+              class="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl py-4 pl-12 pr-4 text-sm focus:bg-white focus:border-lojaPrimaria focus:ring-4 focus:ring-lojaPrimaria/10 transition-all outline-none"
+              value="${this.searchQuery}"
+            />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-lojaPrimaria transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
         </section>
 
-        <section id="products-grid-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <!-- CATEGORIAS STICKY -->
+        <section class="sticky top-[73px] z-30 -mx-4 px-4 py-4 bg-white/80 backdrop-blur-md border-b border-gray-100/80 scrollbar-none overflow-x-auto">
+          <div class="flex gap-3 max-w-7xl mx-auto">
+            <button data-category-id="all" class="js-category-btn whitespace-nowrap px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all border ${!this.selectedCategoryId ? 'bg-lojaPrimaria text-white border-lojaPrimaria shadow-lg shadow-lojaPrimaria/20' : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'}">🔥 Todos</button>
+            ${categories.map(cat => `
+              <button data-category-id="${cat.id}" class="js-category-btn whitespace-nowrap px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all border ${this.selectedCategoryId === cat.id ? 'bg-lojaPrimaria text-white border-lojaPrimaria shadow-lg shadow-lojaPrimaria/20' : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'}">${cat.name}</button>
+            `).join('')}
+          </div>
+        </section>
+
+        <section id="products-grid-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 px-2 md:px-0">
           ${this.renderProductsHTML(this.allProducts, formatCurrency)}
         </section>
       </main>
@@ -117,15 +137,48 @@ export const Home = {
   },
 
   renderProductsHTML(products, formatCurrency) {
-    const filtered = this.selectedCategoryId ? products.filter(p => p.category_id === this.selectedCategoryId) : products;
+    let filtered = products;
+
+    if (this.selectedCategoryId) {
+      filtered = filtered.filter(p => p.category_id === this.selectedCategoryId);
+    }
+
+    if (this.searchQuery) {
+      const query = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(p =>
+        p.title?.toLowerCase().includes(query) ||
+        p.description?.toLowerCase().includes(query)
+      );
+    }
+
+    if (filtered.length === 0) {
+      return `
+        <div class="col-span-full py-20 text-center space-y-4">
+          <div class="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <p class="text-gray-500 font-medium">Nenhum produto encontrado para sua busca.</p>
+        </div>
+      `;
+    }
 
     return filtered.map(prod => {
-      const temDesconto = prod.promo_price && Number(prod.price) > Number(prod.promo_price);
+      const price = Number(prod.price);
+      const promoPrice = prod.promo_price ? Number(prod.promo_price) : null;
+      const hasDiscount = promoPrice && price > promoPrice;
+      const discountPercentage = hasDiscount ? Math.round(((price - promoPrice) / price) * 100) : 0;
 
       return `
-        <div class="js-product-card group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100 flex flex-col h-full relative" data-id="${prod.id}">
+        <div class="js-product-card group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer border border-gray-100 flex flex-col h-full relative animate-in fade-in duration-500" data-id="${prod.id}">
 
-          ${temDesconto ? `<span class="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-md z-10 shadow-sm animate-pulse">PROMO</span>` : ''}
+          ${hasDiscount ? `
+            <span class="absolute top-2 left-2 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-1 rounded-md z-10 shadow-sm flex flex-col items-center leading-none">
+              <span>${discountPercentage}%</span>
+              <span class="text-[7px] opacity-80">OFF</span>
+            </span>
+          ` : ''}
 
           <div class="aspect-square w-full overflow-hidden bg-gray-50 relative">
             <img
@@ -135,15 +188,15 @@ export const Home = {
               onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500';"
             />
           </div>
-          <div class="p-4 flex flex-col flex-grow">
-            <span class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">${prod.categories?.name || 'Geral'}</span>
-            <h3 class="font-semibold text-gray-800 text-sm line-clamp-2 mb-2 flex-grow">${prod.title}</h3>
-            <div class="flex items-baseline justify-between mt-auto pt-2 gap-1 flex-wrap">
-              <div class="flex items-baseline gap-1.5">
-                ${temDesconto ? `<span class="text-xs text-gray-400 line-through">R$ ${prod.price}</span>` : ''}
-                <span class="text-base font-bold ${temDesconto ? 'text-red-600' : 'text-gray-900'}">${formatCurrency(prod.promo_price || prod.price)}</span>
+          <div class="p-3 md:p-4 flex flex-col flex-grow">
+            <span class="text-[9px] text-gray-400 uppercase font-black tracking-widest mb-1">${prod.categories?.name || 'Geral'}</span>
+            <h3 class="font-bold text-gray-800 text-xs md:text-sm line-clamp-2 mb-2 flex-grow leading-tight">${prod.title}</h3>
+            <div class="flex flex-col mt-auto pt-2">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                ${hasDiscount ? `<span class="text-[10px] text-gray-400 line-through">R$ ${prod.price}</span>` : ''}
+                <span class="text-sm md:text-lg font-black ${hasDiscount ? 'text-red-600' : 'text-gray-900'}">${formatCurrency(promoPrice || price)}</span>
               </div>
-              <button class="js-quick-add bg-lojaPrimaria text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:opacity-90 transition">
+              <button class="js-quick-add mt-2 w-full bg-gray-900 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-lojaPrimaria transition-colors shadow-sm">
                 Adicionar
               </button>
             </div>
@@ -155,17 +208,27 @@ export const Home = {
 
   bindEvents(container) {
     const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
+    // Filtro de Busca em Tempo Real
+    const searchInput = container.querySelector('#search-input');
+    if (searchInput) {
+      searchInput.oninput = (e) => {
+        this.searchQuery = e.target.value;
+        const grid = container.querySelector('#products-grid-container');
+        grid.innerHTML = this.renderProductsHTML(this.allProducts, formatCurrency);
+        this.bindCardEvents(container);
+      };
+    }
+
     container.querySelectorAll('.js-category-btn').forEach(btn => {
       btn.onclick = () => {
         this.selectedCategoryId = btn.dataset.categoryId === 'all' ? null : btn.dataset.categoryId;
 
         // Update active state classes
         container.querySelectorAll('.js-category-btn').forEach(b => {
-          b.classList.remove('bg-lojaPrimaria', 'text-white');
-          b.classList.add('bg-white', 'text-gray-600', 'border-gray-100');
+          b.className = 'js-category-btn whitespace-nowrap px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all border bg-white text-gray-500 border-gray-100 hover:border-gray-200';
         });
-        btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-100');
-        btn.classList.add('bg-lojaPrimaria', 'text-white');
+        btn.className = 'js-category-btn whitespace-nowrap px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all border bg-lojaPrimaria text-white border-lojaPrimaria shadow-lg shadow-lojaPrimaria/20';
 
         container.querySelector('#products-grid-container').innerHTML = this.renderProductsHTML(this.allProducts, formatCurrency);
         this.bindCardEvents(container);

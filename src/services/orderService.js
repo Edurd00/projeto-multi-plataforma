@@ -47,22 +47,31 @@ export const orderService = {
 
       await supabase.from('order_items').insert(itemsToInsert);
 
-      let text = `*🛒 NOVO PEDIDO RECEBIDO!*\n`;
-      text += `----------------------------------\n`;
+      let text = `*📦 NOVO PEDIDO RECEBIDO*\n`;
+      text += `----------------------------------------\n`;
       text += `*Cliente:* ${customerName}\n`;
       text += `*Telefone:* ${customerPhone}\n`;
-      text += `----------------------------------\n`;
-      text += `*ITENS DO PEDIDO:*\n`;
+      text += `----------------------------------------\n`;
+      text += `*🛒 ITENS DO PEDIDO:*\n`;
 
       cartItems.forEach(item => {
         const prod = item.product || item;
         const unitPrice = prod.promo_price && prod.promo_price < prod.price ? prod.promo_price : prod.price;
-        text += `• ${item.quantity}x ${prod.title} - ${formatCurrency(unitPrice)}\n`;
+        text += `${item.quantity}x ${prod.title} - ${formatCurrency(unitPrice)}\n`;
+        if (item.selectedAttributes?.size) text += `- Tamanho selecionado: ${item.selectedAttributes.size}\n`;
+        if (item.selectedAttributes?.color) text += `- Cor selecionada: ${item.selectedAttributes.color}\n`;
       });
 
-      text += `----------------------------------\n`;
-      text += `*Forma de Entrega:* ${deliveryAddress}\n`;
-      text += `*Total do Pedido:* ${formatCurrency(totalAmount)}\n`;
+      text += `----------------------------------------\n`;
+      text += `*💰 RESUMO DOS VALORES:*\n`;
+      text += `Subtotal: ${formatCurrency(subtotal)}\n`;
+      text += `Taxa de Entrega: ${deliveryFee === 0 ? 'Grátis' : formatCurrency(deliveryFee)}\n`;
+      text += `*TOTAL DO PEDIDO: ${formatCurrency(totalAmount)}*\n`;
+      text += `----------------------------------------\n`;
+      text += `*📍 DADOS DE ENTREGA / PAGAMENTO:*\n`;
+      text += `Forma de Pagamento: ${paymentMethod}\n`;
+      text += `Tipo: ${deliveryAddress ? 'Delivery' : 'Retirada'}\n`;
+      text += `Endereço: ${deliveryAddress || 'Retirada no Local'}\n`;
 
       const cleanPhone = tenant.whatsapp_number.replace(/\D/g, '');
       const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;

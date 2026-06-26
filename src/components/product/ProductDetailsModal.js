@@ -5,7 +5,7 @@ export const ProductDetailsModal = {
     const formatCurrency = (value) =>
       new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
-    const placeholderImg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`;
+    const placeholderImg = "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500";
 
     return `
       <div id="product-modal-root" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -21,7 +21,7 @@ export const ProductDetailsModal = {
           <div class="w-full md:w-1/2 aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
             <img
               src="${product.image_url || ''}"
-              onerror="this.src='${placeholderImg}'; this.className='w-1/2 h-1/2 object-contain opacity-20';"
+              onerror="this.onerror=null; this.src='${placeholderImg}';"
               class="w-full h-full object-cover"
               alt="${product.title}"
             />
@@ -46,10 +46,13 @@ export const ProductDetailsModal = {
 
               ${product.attributes && product.attributes.length > 0 ? `
                 <div class="space-y-3">
-                  <h4 class="text-xs font-bold text-gray-400 uppercase">Tamanhos Disponíveis</h4>
+                  <div class="flex justify-between items-center">
+                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Selecione o Tamanho</h4>
+                    <span id="selected-size-label" class="text-[10px] font-bold text-lojaPrimaria uppercase"></span>
+                  </div>
                   <div class="flex flex-wrap gap-2">
                     ${product.attributes.map(attr => `
-                      <button class="js-attr-btn px-4 py-2 border-2 border-gray-100 rounded-xl text-sm font-bold hover:border-lojaPrimaria transition" data-attr="${attr}">${attr}</button>
+                      <button class="js-attr-btn px-5 py-2.5 border-2 border-gray-100 rounded-2xl text-xs font-black uppercase tracking-wider hover:border-gray-300 transition-all active:scale-95" data-attr="${attr}">${attr}</button>
                     `).join('')}
                   </div>
                 </div>
@@ -57,10 +60,13 @@ export const ProductDetailsModal = {
 
               ${product.colors && product.colors.length > 0 ? `
                 <div class="space-y-3">
-                  <h4 class="text-xs font-bold text-gray-400 uppercase">Cores</h4>
+                  <div class="flex justify-between items-center">
+                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Escolha a Cor</h4>
+                    <span id="selected-color-label" class="text-[10px] font-bold text-lojaPrimaria uppercase"></span>
+                  </div>
                   <div class="flex flex-wrap gap-2">
                     ${product.colors.map(color => `
-                      <button class="js-color-btn px-4 py-2 border-2 border-gray-100 rounded-xl text-sm font-bold hover:border-lojaPrimaria transition" data-color="${color}">${color}</button>
+                      <button class="js-color-btn px-5 py-2.5 border-2 border-gray-100 rounded-2xl text-xs font-black uppercase tracking-wider hover:border-gray-300 transition-all active:scale-95" data-color="${color}">${color}</button>
                     `).join('')}
                   </div>
                 </div>
@@ -116,17 +122,29 @@ export const ProductDetailsModal = {
 
     container.querySelectorAll('.js-attr-btn').forEach(btn => {
       btn.onclick = () => {
-        container.querySelectorAll('.js-attr-btn').forEach(b => b.classList.replace('border-lojaPrimaria', 'border-gray-100'));
-        btn.classList.replace('border-gray-100', 'border-lojaPrimaria');
+        container.querySelectorAll('.js-attr-btn').forEach(b => {
+          b.classList.remove('border-lojaPrimaria', 'bg-lojaPrimaria/5', 'text-lojaPrimaria');
+          b.classList.add('border-gray-100');
+        });
+        btn.classList.remove('border-gray-100');
+        btn.classList.add('border-lojaPrimaria', 'bg-lojaPrimaria/5', 'text-lojaPrimaria');
         selectedAttr = btn.getAttribute('data-attr');
+        const label = container.querySelector('#selected-size-label');
+        if (label) label.innerText = selectedAttr;
       };
     });
 
     container.querySelectorAll('.js-color-btn').forEach(btn => {
       btn.onclick = () => {
-        container.querySelectorAll('.js-color-btn').forEach(b => b.classList.replace('border-lojaPrimaria', 'border-gray-100'));
-        btn.classList.replace('border-gray-100', 'border-lojaPrimaria');
+        container.querySelectorAll('.js-color-btn').forEach(b => {
+          b.classList.remove('border-lojaPrimaria', 'bg-lojaPrimaria/5', 'text-lojaPrimaria');
+          b.classList.add('border-gray-100');
+        });
+        btn.classList.remove('border-gray-100');
+        btn.classList.add('border-lojaPrimaria', 'bg-lojaPrimaria/5', 'text-lojaPrimaria');
         selectedColor = btn.getAttribute('data-color');
+        const label = container.querySelector('#selected-color-label');
+        if (label) label.innerText = selectedColor;
       };
     });
 
