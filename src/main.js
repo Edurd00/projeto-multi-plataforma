@@ -75,7 +75,18 @@ async function mountApp() {
 
   async function updateUI() {
     const { cart } = appContext.getState();
-    if (cartCounterSlot) cartCounterSlot.innerText = cart.reduce((sum, i) => sum + i.quantity, 0);
+    const currentCount = parseInt(cartCounterSlot?.innerText || '0');
+    const newCount = cart.reduce((sum, i) => sum + i.quantity, 0);
+
+    if (cartCounterSlot) {
+      cartCounterSlot.innerText = newCount;
+      if (newCount > currentCount) {
+        const trigger = document.getElementById('floating-cart-trigger');
+        trigger?.classList.add('scale-110');
+        setTimeout(() => trigger?.classList.remove('scale-110'), 300);
+      }
+    }
+
     cartContainer.innerHTML = CartDrawer.render();
     CartDrawer.bindEvents(cartContainer, () => CheckoutModal.open());
     checkoutContainer.innerHTML = CheckoutModal.render();

@@ -203,6 +203,14 @@ export const Home = {
         const card = btn.closest('.js-product-card');
         if (card) {
           window.dispatchEvent(new CustomEvent('global:add-to-cart', { detail: { id: card.dataset.id } }));
+
+          const originalText = btn.innerText;
+          btn.innerText = '✓ Adicionado!';
+          btn.classList.add('bg-green-600');
+          setTimeout(() => {
+            btn.innerText = originalText;
+            btn.classList.remove('bg-green-600');
+          }, 1500);
         }
       };
     });

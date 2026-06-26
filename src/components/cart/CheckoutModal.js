@@ -107,15 +107,41 @@ export const CheckoutModal = {
   bindEvents(container, onComplete) {
     const closeBtn = container.querySelector('#close-checkout');
     const form = container.querySelector('#checkout-form');
+    const phoneInput = container.querySelector('#form-phone');
+
+    if (phoneInput) {
+      phoneInput.oninput = (e) => {
+        let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+        e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+      };
+    }
+
     window.currentCheckoutCallback = onComplete;
     if (closeBtn) closeBtn.onclick = () => this.close();
     if (form) {
       form.onsubmit = (e) => {
         e.preventDefault();
+
+        const nameInput = container.querySelector('#form-name');
+        const addressInput = container.querySelector('#form-address');
+        const phoneInput = container.querySelector('#form-phone');
+
+        let hasError = false;
+        [nameInput, addressInput, phoneInput].forEach(input => {
+          if (!input.value.trim()) {
+            input.classList.add('border-red-500');
+            hasError = true;
+          } else {
+            input.classList.remove('border-red-500');
+          }
+        });
+
+        if (hasError) return;
+
         const data = {
-          customerName: container.querySelector('#form-name').value,
-          customerPhone: container.querySelector('#form-phone').value,
-          deliveryAddress: container.querySelector('#form-address').value,
+          customerName: nameInput.value,
+          customerPhone: phoneInput.value,
+          deliveryAddress: addressInput.value,
           paymentMethod: container.querySelector('#form-payment').value,
         };
         onComplete(data);

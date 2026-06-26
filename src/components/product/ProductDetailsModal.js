@@ -21,7 +21,7 @@ export const ProductDetailsModal = {
           <div class="w-full md:w-1/2 aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
             <img
               src="${product.image_url || ''}"
-              onerror="this.src='${placeholderImg}'; this.className='w-1/2 h-1/2 object-contain opacity-20';"
+              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500';"
               class="w-full h-full object-cover"
               alt="${product.title}"
             />
@@ -145,7 +145,14 @@ export const ProductDetailsModal = {
         size: selectedAttr,
         color: selectedColor
       });
-      close();
+
+      const originalText = addBtn.innerText;
+      addBtn.innerText = '✓ Adicionado!';
+      addBtn.classList.add('bg-green-600');
+
+      setTimeout(() => {
+        close();
+      }, 1000);
     };
   }
 };

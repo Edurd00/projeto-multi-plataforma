@@ -57,7 +57,7 @@ export const CartDrawer = {
 
       return `
                   <div class="flex gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                    <img src="${item.product.image_url || 'https://via.placeholder.com/100'}" class="w-16 h-16 rounded-lg object-cover bg-white border" />
+                    <img src="${item.product.image_url || ''}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100';" class="w-16 h-16 rounded-lg object-cover bg-white border" />
                     <div class="flex-grow flex flex-col justify-between">
                       <div>
                         <h4 class="text-sm font-semibold text-gray-800 line-clamp-1">${item.product.title}</h4>

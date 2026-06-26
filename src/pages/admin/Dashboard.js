@@ -198,7 +198,7 @@ export const Dashboard = {
                   <div class="group bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 flex items-center justify-between hover:shadow-md transition shadow-sm">
                     <div class="flex items-center gap-4 min-w-0">
                       <div class="relative w-16 h-16 rounded-xl overflow-hidden bg-gray-50 flex-shrink-0">
-                        <img src="${prod.image_url || ''}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100';" />
+                        <img src="${prod.image_url || ''}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100';" alt="${prod.title}" />
                         ${!prod.is_active ? `<div class="absolute inset-0 bg-black/60 flex items-center justify-center"><span class="text-[8px] text-white font-black">PAUSADO</span></div>` : ''}
                       </div>
                       <div class="min-w-0">
@@ -371,6 +371,12 @@ export const Dashboard = {
           const slug = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-');
           const { data: newCat } = await supabase.from('categories').insert({ name, slug }).select().single();
           catId = newCat.id;
+        }
+
+        const price = parseFloat(container.querySelector('#prod-price').value);
+        if (isNaN(price) || price <= 0) {
+           alert("O preço deve ser um valor positivo!");
+           return;
         }
 
         const payload = {
