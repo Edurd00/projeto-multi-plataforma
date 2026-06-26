@@ -5,6 +5,37 @@ export const Home = {
   selectedCategoryId: null,
   allProducts: [],
 
+  renderSkeleton() {
+    const skeletonCard = `
+      <div class="animate-pulse bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col h-full">
+        <div class="aspect-square w-full bg-gray-200"></div>
+        <div class="p-4 space-y-4 flex-grow">
+          <div class="h-3 bg-gray-200 rounded w-1/4"></div>
+          <div class="space-y-2">
+            <div class="h-4 bg-gray-200 rounded w-full"></div>
+            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+          </div>
+          <div class="flex justify-between items-center mt-auto pt-2">
+            <div class="h-6 bg-gray-200 rounded w-1/3"></div>
+            <div class="h-8 bg-gray-200 rounded w-1/4"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    return `
+      <section class="animate-pulse w-full h-[500px] bg-gray-200 flex items-center justify-center"></section>
+      <main class="max-w-7xl mx-auto px-4 py-12 space-y-16">
+        <section class="flex gap-3 overflow-x-auto pb-4">
+          ${[1, 2, 3, 4, 5].map(() => `<div class="animate-pulse bg-gray-200 h-10 w-24 rounded-full flex-shrink-0"></div>`).join('')}
+        </section>
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          ${Array(8).fill(skeletonCard).join('')}
+        </section>
+      </main>
+    `;
+  },
+
   async render() {
     try {
       const [productsRes, categoriesRes, tenantRes] = await Promise.all([

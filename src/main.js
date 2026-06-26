@@ -12,7 +12,24 @@ async function mountApp() {
   await appContext.initTenant();
   const appDiv = document.getElementById('app');
   if (!appDiv) return;
-  const tenantData = appContext.getState().tenant;
+
+  const { tenant: tenantData, error } = appContext.getState();
+
+  if (error) {
+    appDiv.innerHTML = `
+      <div class="min-h-screen flex items-center justify-center bg-gray-50 p-6 text-center">
+        <div class="max-w-md space-y-6 bg-white p-10 rounded-3xl shadow-xl border border-red-50">
+          <div class="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto animate-bounce">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          </div>
+          <h2 class="text-2xl font-black text-gray-900">Erro de Conexão</h2>
+          <p class="text-gray-500 font-medium">Não conseguimos conectar ao banco de dados. Verifique sua internet.</p>
+          <button onclick="location.reload()" class="w-full bg-lojaPrimaria text-white font-bold py-4 rounded-2xl shadow-lg transition-transform active:scale-95">Tentar Novamente</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
   const urlParams = new URLSearchParams(window.location.search);
   const currentPage = urlParams.get('page');
   const { data: { session } } = await supabase.auth.getSession();
@@ -86,7 +103,9 @@ async function mountApp() {
     });
   }
 
-  homeContainer.innerHTML = await Home.render();
+  homeContainer.innerHTML = Home.renderSkeleton();
+  const homeHTML = await Home.render();
+  homeContainer.innerHTML = homeHTML;
   Home.bindEvents(homeContainer);
 
   window.addEventListener('global:add-to-cart', async (e) => {

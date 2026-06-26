@@ -1,11 +1,13 @@
 import { injectTheme } from '../config/theme.js';
 import { supabase } from '../config/supabase.js';
+import { updateMetaTags } from '../config/meta.js';
 
 class AppState {
   constructor() {
     this.state = {
       tenant: null,
       cart: JSON.parse(localStorage.getItem('cart')) || [],
+      error: null,
       listeners: []
     };
   }
@@ -22,7 +24,11 @@ class AppState {
   }
 
   getState() {
-    return { tenant: this.state.tenant, cart: this.state.cart };
+    return {
+      tenant: this.state.tenant,
+      cart: this.state.cart,
+      error: this.state.error
+    };
   }
 
   async initTenant() {
@@ -37,10 +43,14 @@ class AppState {
       if (data) {
         this.state.tenant = data;
         injectTheme(data.primary_color, data.secondary_color);
-        this.notify();
+        updateMetaTags(data);
+        this.state.error = null;
       }
+      this.notify();
     } catch (err) {
       console.error("Erro ao carregar Tenant:", err.message);
+      this.state.error = err.message;
+      this.notify();
     }
   }
 

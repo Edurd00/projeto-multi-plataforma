@@ -94,17 +94,35 @@ ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 
 -- Public read access
-CREATE POLICY "Public Read Tenant" ON tenant_settings FOR SELECT USING (true);
-CREATE POLICY "Public Read Categories" ON categories FOR SELECT USING (true);
-CREATE POLICY "Public Read Products" ON products FOR SELECT USING (true);
+-- Security Policies (Strict RLS)
 
--- Authenticated write access (Admin)
-CREATE POLICY "Admin Write Tenant" ON tenant_settings FOR ALL TO authenticated USING (true);
-CREATE POLICY "Admin Write Categories" ON categories FOR ALL TO authenticated USING (true);
-CREATE POLICY "Admin Write Products" ON products FOR ALL TO authenticated USING (true);
-CREATE POLICY "Admin Read Orders" ON orders FOR SELECT TO authenticated USING (true);
+-- [TENANT SETTINGS]
+-- Anonymous: Read only
+CREATE POLICY "Public Read Tenant" ON tenant_settings FOR SELECT USING (true);
+-- Authenticated: Full access
+CREATE POLICY "Admin Manage Tenant" ON tenant_settings FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- [CATEGORIES]
+-- Anonymous: Read only
+CREATE POLICY "Public Read Categories" ON categories FOR SELECT USING (true);
+-- Authenticated: Full access
+CREATE POLICY "Admin Manage Categories" ON categories FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- [PRODUCTS]
+-- Anonymous: Read only
+CREATE POLICY "Public Read Products" ON products FOR SELECT USING (true);
+-- Authenticated: Full access
+CREATE POLICY "Admin Manage Products" ON products FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- [ORDERS]
+-- Anonymous: Insert only (Checkout)
+CREATE POLICY "Public Insert Orders" ON orders FOR INSERT WITH CHECK (true);
+-- Authenticated: Read & Update
+CREATE POLICY "Admin Manage Orders" ON orders FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Admin Update Orders" ON orders FOR UPDATE TO authenticated USING (true);
 
--- Public insert for orders (Checkout)
-CREATE POLICY "Public Insert Orders" ON orders FOR INSERT WITH CHECK (true);
+-- [ORDER ITEMS]
+-- Anonymous: Insert only
 CREATE POLICY "Public Insert Order Items" ON order_items FOR INSERT WITH CHECK (true);
+-- Authenticated: Read
+CREATE POLICY "Admin Read Order Items" ON order_items FOR SELECT TO authenticated USING (true);
