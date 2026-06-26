@@ -22,6 +22,7 @@ CREATE TABLE tenant_settings (
     primary_color TEXT DEFAULT '#3b82f6',
     secondary_color TEXT DEFAULT '#1e3a8a',
     delivery_fee NUMERIC(10,2) DEFAULT 0.00,
+    is_open BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -48,6 +49,8 @@ CREATE TABLE products (
     colors JSONB DEFAULT '[]'::jsonb,     -- Colors like ["Preto", "Branco"]
     shipping_fee NUMERIC(10,2) DEFAULT 0.00,
     in_stock BOOLEAN DEFAULT true,
+    is_active BOOLEAN DEFAULT true,
+    stock INTEGER DEFAULT 10,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -60,7 +63,7 @@ CREATE TABLE orders (
     delivery_address TEXT,
     payment_method TEXT NOT NULL,
     total_amount NUMERIC(10,2) NOT NULL,
-    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'shipped', 'cancelled')),
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'preparing', 'shipped', 'cancelled')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -108,3 +111,25 @@ CREATE POLICY "Admin Update Orders" ON orders FOR UPDATE TO authenticated USING 
 -- Public insert for orders (Checkout)
 CREATE POLICY "Public Insert Orders" ON orders FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public Insert Order Items" ON order_items FOR INSERT WITH CHECK (true);
+
+-- ==========================================
+-- MIGRATIONS (For existing databases)
+-- ==========================================
+-- DO $$
+-- BEGIN
+--     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='tenant_settings' AND column_name='is_open') THEN
+--         ALTER TABLE tenant_settings ADD COLUMN is_open BOOLEAN DEFAULT true;
+--     END IF;
+--
+--     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='is_active') THEN
+--         ALTER TABLE products ADD COLUMN is_active BOOLEAN DEFAULT true;
+--     END IF;
+--
+--     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='stock') THEN
+--         ALTER TABLE products ADD COLUMN stock INTEGER DEFAULT 10;
+--     END IF;
+--
+--     -- Update order status check constraint if necessary
+--     -- ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
+--     -- ALTER TABLE orders ADD CONSTRAINT orders_status_check CHECK (status IN ('pending', 'preparing', 'shipped', 'cancelled'));
+-- END $$;

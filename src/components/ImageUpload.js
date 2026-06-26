@@ -19,12 +19,17 @@ export const ImageUpload = {
               <div class="animate-spin rounded-full h-5 w-5 border-2 border-lojaPrimaria border-t-transparent"></div>
             </div>
           </div>
-          <div class="flex-grow">
+          <div class="flex-grow space-y-2">
             <input type="file" id="input-${id}" accept="image/*" class="hidden" />
             <button type="button" onclick="document.getElementById('input-${id}').click()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold py-2 px-4 rounded-lg transition">
               Selecionar Arquivo
             </button>
-            <p class="text-[10px] text-gray-400 mt-1">PNG, JPG ou WEBP. Máx 2MB.</p>
+
+            <div id="progress-container-${id}" class="hidden w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+               <div id="progress-bar-${id}" class="bg-lojaPrimaria h-full w-0 transition-all duration-300"></div>
+            </div>
+
+            <p class="text-[10px] text-gray-400 mt-1">PNG, JPG ou WEBP. Auto-compressão ativa.</p>
             <input type="hidden" id="url-${id}" value="${currentUrl}" />
           </div>
         </div>
@@ -32,36 +37,69 @@ export const ImageUpload = {
     `;
   },
 
+  async compressImage(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 1080;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob((blob) => {
+            resolve(blob);
+          }, 'image/jpeg', 0.75);
+        };
+      };
+    });
+  },
+
   bindEvents(id, onUploadComplete) {
     const input = document.getElementById(`input-${id}`);
     const loading = document.getElementById(`loading-${id}`);
     const previewContainer = document.getElementById(`container-${id}`).querySelector('.relative');
     const urlInput = document.getElementById(`url-${id}`);
+    const progressContainer = document.getElementById(`progress-container-${id}`);
+    const progressBar = document.getElementById(`progress-bar-${id}`);
 
     if (input) {
       input.onchange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        if (file.size > 2 * 1024 * 1024) {
-          alert("O arquivo é muito grande! Máximo 2MB.");
-          return;
-        }
-
         loading.classList.remove('hidden');
         loading.classList.add('flex');
+        progressContainer.classList.remove('hidden');
+        progressBar.style.width = '20%';
 
         try {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Math.random()}.${fileExt}`;
+          const compressedBlob = await this.compressImage(file);
+          progressBar.style.width = '50%';
+
+          const fileName = `${Math.random().toString(36).substring(2)}.jpg`;
           const filePath = `uploads/${fileName}`;
 
           const { error: uploadError } = await supabase.storage
             .from('loja')
-            .upload(filePath, file);
+            .upload(filePath, compressedBlob);
 
           if (uploadError) throw uploadError;
 
+          progressBar.style.width = '100%';
           const { data: { publicUrl } } = supabase.storage
             .from('loja')
             .getPublicUrl(filePath);
@@ -83,6 +121,10 @@ export const ImageUpload = {
         } finally {
           loading.classList.add('hidden');
           loading.classList.remove('flex');
+          setTimeout(() => {
+            progressContainer.classList.add('hidden');
+            progressBar.style.width = '0%';
+          }, 1000);
         }
       };
     }

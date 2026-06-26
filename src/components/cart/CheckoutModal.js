@@ -29,6 +29,9 @@ export const CheckoutModal = {
     // 3. Soma final
     const totalWithDelivery = totalCartAmount + deliveryFee;
 
+    const { tenant } = appContext.getState();
+    const isClosed = tenant?.is_open === false;
+
     // 4. Texto da entrega
     const deliveryText = deliveryFee > 0 
       ? formatCurrency(deliveryFee)
@@ -80,8 +83,8 @@ export const CheckoutModal = {
                 <option value="Dinheiro">Dinheiro</option>
               </select>
             </div>
-            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition text-sm shadow-sm mt-4">
-              Confirmar e Enviar para WhatsApp
+            <button type="submit" ${isClosed ? 'disabled' : ''} class="w-full ${isClosed ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white font-bold py-3 rounded-xl transition text-sm shadow-sm mt-4">
+              ${isClosed ? 'Loja Fechada - Pedidos Indisponíveis' : 'Confirmar e Enviar para WhatsApp'}
             </button>
           </form>
         </div>

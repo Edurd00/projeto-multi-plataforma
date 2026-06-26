@@ -21,6 +21,9 @@ export const Home = {
     const categories = categoriesRes.data || [];
     const tenant = tenantRes.data || {};
 
+    // Filter active products
+    this.allProducts = this.allProducts.filter(p => p.is_active !== false);
+
     const heroStyle = tenant.hero_image_url
       ? `style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('${tenant.hero_image_url}'); background-size: cover; background-position: center;"`
       : 'class="bg-gradient-to-br from-lojaPrimaria to-lojaSecundaria"';
@@ -29,6 +32,12 @@ export const Home = {
       new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
     return `
+      ${tenant.is_open === false ? `
+        <div class="bg-red-600 text-white text-center py-3 px-4 font-black uppercase tracking-widest text-sm sticky top-0 z-[60] shadow-lg animate-pulse">
+          🚩 AVISO: LOJA FECHADA NO MOMENTO. PEDIDOS DESATIVADOS.
+        </div>
+      ` : ''}
+
       <section class="relative w-full h-[500px] flex items-center justify-center text-center px-4" ${heroStyle.startsWith('style') ? heroStyle : ''} ${heroStyle.startsWith('class') ? heroStyle : ''}>
         <div class="max-w-4xl mx-auto space-y-6 relative z-10 text-white">
           <h2 class="text-5xl md:text-7xl font-black uppercase tracking-tight">${tenant.hero_title || 'Bem-vindo'}</h2>
