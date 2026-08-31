@@ -3,13 +3,13 @@ import { api } from '../../services/api.js';
 export const Home = {
   renderSkeleton() {
     return `
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 px-2 md:px-0 animate-pulse">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-pulse">
         ${Array(8).fill(0).map(() => `
-          <div class="bg-white rounded-xl p-3 border border-gray-100 flex flex-col space-y-3">
-            <div class="w-full aspect-square bg-gray-200 rounded-lg"></div>
+          <div class="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col space-y-3 shadow-sm">
+            <div class="w-full aspect-square bg-gray-200 rounded-xl"></div>
             <div class="h-4 bg-gray-200 rounded w-3/4"></div>
             <div class="h-3 bg-gray-200 rounded w-1/2"></div>
-            <div class="h-8 bg-gray-200 rounded w-full mt-2"></div>
+            <div class="h-9 bg-gray-200 rounded-lg w-full mt-2"></div>
           </div>
         `).join('')}
       </div>
@@ -42,23 +42,23 @@ export const Home = {
           ` : ''}
 
           <!-- HERO SECTION -->
-          <div class="relative bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-lg">
+          <div class="relative bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-12 md:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-lg">
             <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px]"></div>
             <div class="max-w-6xl mx-auto relative z-10 flex flex-col items-center text-center">
               <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-3 drop-shadow-md">
                 ${tenantSettings?.store_name || 'Bem-vindo à nossa Loja'}
               </h1>
-              <p class="text-base md:text-lg text-gray-300 max-w-2xl mb-6">
+              <p class="text-base md:text-lg text-gray-300 max-w-2xl mb-2">
                 Explore as melhores ofertas e produtos de alta qualidade com entrega rápida.
               </p>
               
               <!-- SEARCH BAR -->
-              <div class="w-full max-w-xl relative">
+              <div class="w-full max-w-xl mx-auto mt-6 relative">
                 <input
                   type="text"
                   id="search-input"
                   placeholder="Buscar produtos por nome ou descrição..."
-                  class="w-full pl-11 pr-4 py-3 rounded-full text-gray-800 bg-white shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-500 transition text-sm md:text-base"
+                  class="w-full pl-11 pr-5 py-3 rounded-full text-gray-800 bg-white shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500 transition text-sm"
                 />
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -70,13 +70,13 @@ export const Home = {
           </div>
 
           <!-- CATEGORIES BAR (STICKY) -->
-          <div class="sticky top-[73px] z-30 bg-white/80 backdrop-blur-md border-b shadow-sm">
+          <div class="sticky top-16 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
             <div class="max-w-6xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto scrollbar-none items-center" id="categories-container">
               <button class="category-btn active bg-gray-900 text-white px-4 py-2 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap transition shadow-sm" data-category="">
                 Todos os Produtos
               </button>
               ${categories?.map(c => `
-                <button class="category-btn bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap transition shadow-sm" data-category="${c.id}">
+                <button class="category-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap transition-colors" data-category="${c.id}">
                   ${c.name}
                 </button>
               `).join('')}
@@ -85,17 +85,17 @@ export const Home = {
 
           <!-- PRODUCT LISTING -->
           <main class="max-w-6xl mx-auto px-4 mt-8">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center justify-between mb-6">
               <h2 class="text-xl md:text-2xl font-bold text-gray-800 tracking-tight" id="section-title">
                 Produtos em Destaque
               </h2>
-              <span class="text-xs md:text-sm text-gray-500 font-medium" id="product-count">
+              <span class="text-sm text-gray-500 font-medium" id="product-count">
                 ${products?.length || 0} produtos encontrados
               </span>
             </div>
 
             <!-- PRODUCT GRID -->
-            <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 px-2 md:px-0 transition-opacity duration-300">
+            <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 transition-opacity duration-300">
               ${this.renderProductsHTML(products)}
             </div>
           </main>
@@ -125,10 +125,10 @@ export const Home = {
       const discount = hasPromo ? Math.round(((product.price - product.promo_price) / product.price) * 100) : 0;
 
       return `
-        <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 flex flex-col group">
-          <div class="relative overflow-hidden aspect-square bg-gray-100">
+        <div class="shadow-sm hover:shadow-md transition-shadow border border-gray-100 rounded-2xl bg-white flex flex-col group overflow-hidden">
+          <div class="relative aspect-square w-full overflow-hidden rounded-t-2xl bg-gray-100">
             ${hasPromo ? `
-              <span class="absolute top-2 left-2 z-10 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase shadow">
+              <span class="absolute top-3 left-3 z-10 bg-red-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm">
                 ${discount}% OFF
               </span>
             ` : ''}
@@ -136,37 +136,37 @@ export const Home = {
               src="${product.image_url}"
               alt="${product.title}"
               onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1560343090-f0409e92791a?auto=format&fit=crop&w=600&q=80';"
-              class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+              class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
             />
           </div>
 
-          <div class="p-3 flex flex-col flex-1 justify-between">
+          <div class="p-4 flex flex-col flex-1 justify-between space-y-3">
             <div>
-              <h3 class="font-bold text-gray-800 text-xs md:text-sm line-clamp-2 leading-tight mb-1">
+              <h3 class="font-bold text-gray-800 text-sm md:text-base line-clamp-1 mb-1">
                 ${product.title}
               </h3>
-              <p class="text-[11px] text-gray-500 line-clamp-2 mb-2">
+              <p class="text-xs text-gray-500 line-clamp-2">
                 ${product.description || ''}
               </p>
             </div>
 
-            <div class="mt-2">
-              <div class="flex items-baseline gap-1.5 mb-2">
+            <div>
+              <div class="flex items-baseline gap-2 mb-3">
                 ${hasPromo ? `
-                  <span class="text-xs md:text-sm font-extrabold text-red-600">R$ ${product.promo_price.toFixed(2)}</span>
-                  <span class="text-[11px] text-gray-400 line-through">R$ ${product.price.toFixed(2)}</span>
+                  <span class="text-base font-extrabold text-red-600">R$ ${product.promo_price.toFixed(2)}</span>
+                  <span class="text-xs text-gray-400 line-through">R$ ${product.price.toFixed(2)}</span>
                 ` : `
-                  <span class="text-xs md:text-sm font-extrabold text-gray-900">R$ ${product.price.toFixed(2)}</span>
+                  <span class="text-base font-extrabold text-gray-900">R$ ${product.price.toFixed(2)}</span>
                 `}
               </div>
 
               <button
-                class="add-to-cart-btn w-full bg-gray-900 text-white hover:bg-gray-800 text-xs py-2 px-3 rounded-lg font-bold transition flex items-center justify-center gap-1"
+                class="add-to-cart-btn w-full bg-gray-900 hover:bg-black text-white text-xs py-2.5 px-4 rounded-xl font-bold transition flex items-center justify-center gap-1.5"
                 data-id="${product.id}"
                 data-sizes='${JSON.stringify(product.sizes || [])}'
                 data-colors='${JSON.stringify(product.colors || [])}'
               >
-                <span>Adicionar</span>
+                <span>Adicionar ao Carrinho</span>
               </button>
             </div>
           </div>
@@ -209,11 +209,11 @@ export const Home = {
     catButtons.forEach(btn => {
       btn.addEventListener('click', (e) => {
         catButtons.forEach(b => {
-          b.classList.remove('bg-gray-900', 'text-white');
-          b.classList.add('bg-gray-100', 'text-gray-700');
+          b.classList.remove('bg-gray-900', 'text-white', 'shadow-sm');
+          b.classList.add('bg-gray-100', 'text-gray-600');
         });
-        btn.classList.remove('bg-gray-100', 'text-gray-700');
-        btn.classList.add('bg-gray-900', 'text-white');
+        btn.classList.remove('bg-gray-100', 'text-gray-600');
+        btn.classList.add('bg-gray-900', 'text-white', 'shadow-sm');
 
         selectedCategory = btn.getAttribute('data-category');
         filterProducts();

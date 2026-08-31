@@ -75,21 +75,23 @@ async function mountApp() {
   // ROTA: VITRINE DO CLIENTE (com injeção opcional da Logo no Header)
   const hasLogo = tenantData?.logo_url;
   const brandHeaderHTML = hasLogo
-    ? `<img src="${tenantData.logo_url}" class="h-20 md:h-24 max-w-[240px] object-contain object-left transform scale-110 original-logo" id="store-logo-slot" alt="${tenantData.store_name}" />`
-    : `<span id="store-title-slot" class="text-xl font-black text-primary tracking-tight uppercase">${tenantData?.store_name || 'VITRINE'}</span>`;
+    ? `<img src="${tenantData.logo_url}" class="h-10 md:h-12 max-w-[200px] object-contain object-left id="store-logo-slot" alt="${tenantData.store_name}" />`
+    : `<span id="store-title-slot" class="text-xl font-black text-gray-900 tracking-tight uppercase">${tenantData?.store_name || 'VITRINE'}</span>`;
 
   appDiv.innerHTML = `
-    <header class="bg-white border-b sticky top-0 z-40 px-4 py-3 shadow-sm flex items-center">
-      <div class="max-w-6xl mx-auto w-full flex justify-between items-center">
+    <header class="h-16 bg-white border-b border-gray-100 sticky top-0 z-40 px-6">
+      <div class="max-w-6xl mx-auto h-full flex justify-between items-center">
         <div class="flex items-center gap-4">
           ${brandHeaderHTML}
         </div>
         <div class="flex items-center gap-3">
-          <a href="?page=admin" class="text-xs font-bold text-gray-500 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg transition hidden sm:inline-block">
+          <a href="?page=admin" class="text-xs font-bold text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-3 py-2 rounded-lg transition hidden sm:inline-block">
             ⚙️ Painel Demo
           </a>
-          <button id="floating-cart-trigger" class="bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-md hover:bg-opacity-90 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+          <button id="floating-cart-trigger" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
             <span id="cart-counter-slot">Carrinho (0)</span>
           </button>
         </div>
