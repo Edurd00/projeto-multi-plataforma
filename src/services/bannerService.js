@@ -1,17 +1,9 @@
-import { supabase } from '../config/supabase.js';
+import { api } from './api.js';
 
 export const bannerService = {
-  /**
-   * Retorna todos os banners ativos para exibição na Home
-   */
   async getActiveBanners() {
     try {
-      const { data, error } = await supabase
-        .from('banners')
-        .select('*')
-        .eq('active', true)
-        .order('created_at', { ascending: false });
-
+      const { data, error } = await api.banners.getAll();
       if (error) throw error;
       return data || [];
     } catch (error) {

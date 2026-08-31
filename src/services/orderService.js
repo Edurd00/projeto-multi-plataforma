@@ -1,123 +1,56 @@
-import { supabase } from '../config/supabase.js';
+import { api } from './api.js';
 
 export const orderService = {
-  /**
-   * Persiste o pedido de forma transacional e dispara para o WhatsApp do lojista
-   */
-  async createOrder({ customerName, customerPhone, deliveryAddress, paymentMethod, cartItems, tenant }) {
+  async createOrder({ name, phone, address, payment, deliveryType, cartItems, tenant }) {
     try {
-      const formatCurrency = (value) =>
-        new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-
-      // 1. LÓGICA DINÂMICA: Varre o carrinho e encontra o MAIOR frete cadastrado entre os itens
-      const deliveryFee = cartItems.reduce((max, item) => {
-        // Fallback seguro caso o campo venha do objeto raiz ou de dentro da propriedade .product
-        const rawShipping = item.shipping_fee ?? item.product?.shipping_fee ?? 0;
-        const itemShipping = parseFloat(rawShipping) || 0;
-        return itemShipping > max ? itemShipping : max;
-      }, 0);
-
-      // 2. Calcula o subtotal dos produtos considerando preços promocionais ativos
-      const subtotal = cartItems.reduce((sum, item) => {
-        const productData = item.product || item; // Garante o mapeamento correto do objeto
-        const price = productData.promo_price && productData.promo_price < productData.price
-          ? productData.promo_price
-          : productData.price;
-        return sum + (price * item.quantity);
-      }, 0);
-
-      // Soma o subtotal ao maior frete encontrado para gerar o montante final
-      const totalAmount = subtotal + deliveryFee;
-
-      // 3. Insere o registro central na tabela 'orders'
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          customer_name: customerName,
-          customer_phone: customerPhone,
-          delivery_address: deliveryAddress,
-          payment_method: paymentMethod,
-          total_amount: totalAmount,
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      // 4. Prepara o lote de inserção (Bulk Insert) na tabela 'order_items'
-      const itemsToInsert = cartItems.map(item => {
-        const productData = item.product || item;
-        const unitPrice = productData.promo_price && productData.promo_price < productData.price
-          ? productData.promo_price
-          : productData.price;
-
-        return {
-          order_id: order.id,
-          product_id: productData.id,
-          quantity: item.quantity,
-          unit_price: unitPrice,
-          selected_attributes: item.selectedAttributes || {}
-        };
+      const { data: order, error } = await api.orders.create({
+        customer_name: name,
+        customer_phone: phone,
+        customer_address: address,
+        payment_method: payment,
+        delivery_type: deliveryType,
+        cartItems
       });
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(itemsToInsert);
+      if (error) throw error;
 
-      if (itemsError) throw itemsError;
+      // Monta a mensagem formatada para o WhatsApp do lojista
+      let text = `*📦 NOVO PEDIDO RECEBIDO - #${order.id.slice(0, 8)}*\n\n`;
+      text += `*👤 CLIENTE:* ${name}\n`;
+      text += `*📞 TELEFONE:* ${phone}\n`;
+      text += `*📍 ENDEREÇO:* ${address}\n`;
+      text += `*🚚 ENTREGA:* ${deliveryType}\n`;
+      text += `*💳 PAGAMENTO:* ${payment}\n\n`;
+      text += `*🛒 ITENS DO PEDIDO:*\n`;
 
-      // 5. SERIALIZAÇÃO E MONTAGEM DO COMPROVANTE DO WHATSAPP
-      let text = `*NOVO PEDIDO CONFIRMADO!* 🚀\n\n`;
-      text += `*Cliente:* ${customerName}\n`;
-      text += `*Telefone:* ${customerPhone}\n`;
-      text += `*Endereço:* ${deliveryAddress || 'Retirada no Local'}\n`;
-      text += `*Pagamento:* ${paymentMethod}\n`;
-      text += `----------------------------------\n`;
-      text += `*ITENS DO PEDIDO:*\n`;
-
+      let total = 0;
       cartItems.forEach(item => {
-        const productData = item.product || item;
-        const unitPrice = productData.promo_price && productData.promo_price < productData.price
-          ? productData.promo_price
-          : productData.price;
+        const itemPrice = item.promo_price || item.price;
+        const subtotal = itemPrice * item.quantity;
+        total += subtotal;
 
-        // Lógica aprimorada para exibir Tamanho e Cor de forma clara
-        let attrsText = "";
-        if (item.selectedAttributes && Object.keys(item.selectedAttributes).length > 0) {
-          attrsText = Object.entries(item.selectedAttributes)
-            .map(([key, value]) => {
-               // Formata a chave para ficar bonita (ex: 'size' vira 'Tam', 'color' vira 'Cor')
-               const label = key === 'size' ? 'Tam' : (key === 'color' ? 'Cor' : key);
-               return `${label}: ${value}`;
-            })
-            .join(' | ');
-          attrsText = `(${attrsText})`;
-        }
+        let optionStr = '';
+        if (item.selectedOptions?.size) optionStr += ` (${item.selectedOptions.size})`;
+        if (item.selectedOptions?.color) optionStr += ` [${item.selectedOptions.color}]`;
 
-        text += `• ${item.quantity}x ${productData.title} ${attrsText} - ${formatCurrency(unitPrice * item.quantity)}\n`;
+        text += `• ${item.quantity}x ${item.title}${optionStr} - R$ ${subtotal.toFixed(2)}\n`;
       });
 
-      // Configuração inteligente do texto do frete no comprovante do lojista
-      const deliveryText = deliveryFee > 0
-        ? formatCurrency(deliveryFee)
-        : 'A combinar / Grátis via Chat 💬';
+      text += `\n*💰 RESUMO DOS VALORES:*\n`;
+      text += `*Subtotal:* R$ ${total.toFixed(2)}\n`;
+      text += `*TOTAL:* R$ ${total.toFixed(2)}\n`;
 
-      text += `----------------------------------\n`;
-      text += `*Subtotal:* ${formatCurrency(subtotal)}\n`;
-      text += `*Taxa de Entrega:* ${deliveryText}\n`;
-      text += `*TOTAL:* ${formatCurrency(totalAmount)}\n\n`;
-      text += `_Pedido registrado automaticamente sob ID: ${order.id.slice(0, 8).toUpperCase()}_`;
+      const merchantPhone = tenant?.phone ? tenant.phone.replace(/\D/g, '') : '5511999999999';
+      const encodedText = encodeURIComponent(text);
+      const whatsappUrl = `https://wa.me/${merchantPhone}?text=${encodedText}`;
 
-      // 6. REDIRECIONAMENTO VIA ENCODING URL SEGURO
-      const whatsappUrl = `https://api.whatsapp.com/send?phone=${tenant.whatsapp_number}&text=${encodeURIComponent(text)}`;
+      // Abre a API do Whatsapp em uma nova guia
       window.open(whatsappUrl, '_blank');
 
       return { success: true, orderId: order.id };
     } catch (error) {
-      console.error("Falha na transação do pedido:", error.message);
-      alert("Houve um erro interno ao processar seu pedido. Tente novamente.");
-      return { success: false };
+      console.error('Erro ao registrar pedido:', error.message);
+      return { success: false, error: error.message };
     }
   }
 };

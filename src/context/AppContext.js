@@ -1,70 +1,103 @@
-import { injectTheme } from '../config/theme.js';
-import { supabase } from '../config/supabase.js';
+import { api } from '../services/api.js';
 
-class AppState {
+class AppContext {
   constructor() {
     this.state = {
       tenant: null,
-      cart: JSON.parse(localStorage.getItem('cart')) || [],
-      listeners: []
+      cart: JSON.parse(localStorage.getItem('cart') || '[]'),
+      isCartOpen: false
     };
+    this.listeners = [];
   }
 
   subscribe(listener) {
-    this.state.listeners.push(listener);
+    this.listeners.push(listener);
     return () => {
-      this.state.listeners = this.state.listeners.filter(l => l !== listener);
+      this.listeners = this.listeners.filter(l => l !== listener);
     };
   }
 
   notify() {
-    this.state.listeners.forEach(listener => listener(this.getState()));
+    this.listeners.forEach(listener => listener(this.state));
   }
 
   getState() {
-    return { tenant: this.state.tenant, cart: this.state.cart };
+    return this.state;
   }
 
   async initTenant() {
     try {
-      const { data, error } = await supabase
-        .from('tenant_settings')
-        .select('*')
-        .maybeSingle();
-
+      const { data, error } = await api.tenant.get();
       if (error) throw error;
-
       if (data) {
         this.state.tenant = data;
-        injectTheme(data.primary_color, data.secondary_color);
-        this.notify();
+        this.applyTheme(data);
       }
-    } catch (err) {
-      console.error("Erro ao carregar Tenant:", err.message);
+    } catch (error) {
+      console.error('Erro ao inicializar tenant:', error);
     }
   }
 
-  addToCart(product, quantity = 1, selectedAttributes = {}) {
-    const cartItemId = `${product.id}-${btoa(JSON.stringify(selectedAttributes))}`;
-    const existingItemIndex = this.state.cart.findIndex(item => item.cartItemId === cartItemId);
+  applyTheme(tenant) {
+    if (tenant.primary_color) {
+      document.documentElement.style.setProperty('--cor-primaria', tenant.primary_color);
+    }
+    if (tenant.secondary_color) {
+      document.documentElement.style.setProperty('--cor-secundaria', tenant.secondary_color);
+    }
+  }
 
-    if (existingItemIndex > -1) {
-      this.state.cart[existingItemIndex].quantity += quantity;
+  addToCart(product, quantity = 1, selectedOptions = {}) {
+    const cart = [...this.state.cart];
+    const itemKey = `${product.id}-${selectedOptions.size || ''}-${selectedOptions.color || ''}`;
+
+    const existingIndex = cart.findIndex(item =>
+      item.id === product.id &&
+      item.selectedOptions?.size === selectedOptions.size &&
+      item.selectedOptions?.color === selectedOptions.color
+    );
+
+    if (existingIndex > -1) {
+      cart[existingIndex].quantity += quantity;
     } else {
-      this.state.cart.push({ cartItemId, product, quantity, selectedAttributes });
+      cart.push({
+        ...product,
+        quantity,
+        selectedOptions,
+        itemKey
+      });
     }
-    this.saveCart();
+
+    this.state.cart = cart;
+    localStorage.setItem('cart', JSON.stringify(cart));
+    this.notify();
   }
 
-  removeFromCart(cartItemId) {
-    this.state.cart = this.state.cart.filter(item => item.cartItemId !== cartItemId);
-    this.saveCart();
-  }
-
-  saveCart() {
+  removeFromCart(itemKey) {
+    this.state.cart = this.state.cart.filter(item => item.itemKey !== itemKey);
     localStorage.setItem('cart', JSON.stringify(this.state.cart));
+    this.notify();
+  }
+
+  updateQuantity(itemKey, delta) {
+    const cart = this.state.cart.map(item => {
+      if (item.itemKey === itemKey) {
+        const newQty = item.quantity + delta;
+        return newQty > 0 ? { ...item, quantity: newQty } : null;
+      }
+      return item;
+    }).filter(Boolean);
+
+    this.state.cart = cart;
+    localStorage.setItem('cart', JSON.stringify(cart));
+    this.notify();
+  }
+
+  clearCart() {
+    this.state.cart = [];
+    localStorage.removeItem('cart');
     this.notify();
   }
 }
 
-export const appContext = new AppState();
+export const appContext = new AppContext();

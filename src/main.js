@@ -6,7 +6,7 @@ import { CheckoutModal } from './components/cart/CheckoutModal.js';
 import { orderService } from './services/orderService.js';
 import { Dashboard } from './pages/admin/Dashboard.js';
 import { Login } from './pages/auth/Login.js';
-import { supabase } from './config/supabase.js';
+import { api } from './services/api.js';
 
 // Função arquitetural para trocar o favicon do navegador dinamicamente
 function updateFavicon(url) {
@@ -35,14 +35,14 @@ async function mountApp() {
   // Recupera as configurações do tenant atualizado
   const tenantData = appContext.getState().tenant;
 
-  // Executa a alteração automática do Favicon baseado nos dados do Banco
+  // Executa a alteração automática do Favicon baseado nos dados
   if (tenantData?.logo_url) {
     updateFavicon(tenantData.logo_url);
   }
 
   const urlParams = new URLSearchParams(window.location.search);
   const currentPage = urlParams.get('page');
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await api.auth.getSession();
 
   // ROTA: LOGIN
   if (currentPage === 'login') {
@@ -62,7 +62,7 @@ async function mountApp() {
       logoutBtn.className = "text-xs bg-red-100 text-red-600 px-2 py-1 rounded-md font-bold mt-1 hover:bg-red-200 transition ml-2";
       logoutBtn.innerText = "Sair (Logout)";
       logoutBtn.onclick = async () => {
-        await supabase.auth.signOut();
+        await api.auth.signOut();
         window.location.search = '';
       };
       headerAdmin.appendChild(logoutBtn);
@@ -84,10 +84,15 @@ async function mountApp() {
         <div class="flex items-center gap-4">
           ${brandHeaderHTML}
         </div>
-        <button id="floating-cart-trigger" class="bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-md hover:bg-opacity-90 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-          <span id="cart-counter-slot">Carrinho (0)</span>
-        </button>
+        <div class="flex items-center gap-3">
+          <a href="?page=admin" class="text-xs font-bold text-gray-500 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-3 py-1.5 rounded-lg transition hidden sm:inline-block">
+            ⚙️ Painel Demo
+          </a>
+          <button id="floating-cart-trigger" class="bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-md hover:bg-opacity-90 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            <span id="cart-counter-slot">Carrinho (0)</span>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -119,21 +124,19 @@ async function mountApp() {
   Home.bindEvents(homeContainer);
 
   window.addEventListener('global:add-to-cart', async (e) => {
-  // Agora desestruturamos o ID, SIZE e COLOR que vêm do Home.js
-  const { id, size, color } = e.detail;
+    const { id, size, color } = e.detail;
 
-  const { data: product } = await supabase.from('products').select('*').eq('id', id).single();
+    const { data: product } = await api.products.getById(id);
 
-  if (product) {
-    // Montamos um objeto com as opções selecionadas (se existirem)
-    const options = {};
-    if (size && size !== 'N/A') options.size = size;
-    if (color && color !== 'N/A') options.color = color;
-    
-    appContext.addToCart(product, 1, options);
-    CartDrawer.open();
-  }
-});
+    if (product) {
+      const options = {};
+      if (size && size !== 'N/A') options.size = size;
+      if (color && color !== 'N/A') options.color = color;
+
+      appContext.addToCart(product, 1, options);
+      CartDrawer.open();
+    }
+  });
   
   document.getElementById('floating-cart-trigger').onclick = () => CartDrawer.open();
   appContext.subscribe(() => updateUI());
