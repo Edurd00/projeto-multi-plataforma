@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase.js';
+import { api } from './api.js';
 
 export const productService = {
   /**
@@ -6,29 +6,12 @@ export const productService = {
    */
   async getProducts({ categoryId, searchQuery, orderBy = 'featured' } = {}) {
     try {
-      let query = supabase
-        .from('products')
-        .select('*')
-        .eq('in_stock', true); // Apenas itens disponíveis na vitrine
-
-      if (categoryId) {
-        query = query.eq('category_id', categoryId);
-      }
-
-      if (searchQuery) {
-        query = query.ilike('title', `%${searchQuery}%`);
-      }
-
-      if (orderBy === 'asc') {
-        query = query.order('price', { ascending: true });
-      } else if (orderBy === 'desc') {
-        query = query.order('price', { ascending: false });
-      } else if (orderBy === 'featured') {
-        query = query.order('is_featured', { ascending: false })
-                     .order('created_at', { ascending: false });
-      }
-
-      const { data, error } = await query;
+      const { data, error } = await api.products.getAll({
+        categoryId,
+        searchQuery,
+        orderBy,
+        storefrontOnly: true
+      });
       if (error) throw error;
       return data || [];
     } catch (error) {
@@ -42,12 +25,7 @@ export const productService = {
    */
   async getById(id) {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*, categories(name)')
-        .eq('id', id)
-        .single();
-
+      const { data, error } = await api.products.getById(id);
       if (error) throw error;
       return data;
     } catch (error) {

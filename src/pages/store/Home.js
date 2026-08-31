@@ -1,293 +1,173 @@
-import { supabase } from '../../config/supabase.js';
+import { api } from '../../services/api.js';
+import { Toast } from '../../components/common/Toast.js';
 
 export const Home = {
-  // Estado local controlado para filtragem em memória
-  selectedCategoryId: null,
-  allProducts: [],
-
- async render() {
-    const [productsRes, categoriesRes, tenantRes] = await Promise.all([
-      supabase.from('products').select('*').eq('in_stock', true).order('created_at', { ascending: false }),
-      supabase.from('categories').select('*').order('name', { ascending: true }),
-      supabase.from('tenant_settings').select('*').maybeSingle()
-    ]);
-
-    this.allProducts = productsRes.data || [];
-    const categories = categoriesRes.data || [];
-    const tenantSettings = tenantRes.data || {};
-
-    const storeName = tenantSettings.store_name || 'Nossa Vitrine';
-    const heroTitle = tenantSettings.hero_title || 'Bem-vindo à nossa Vitrine';
-    const heroSubtitle = tenantSettings.hero_subtitle || 'Navegue pelas nossas categorias, monte seu carrinho e finalize seu pedido diretamente pelo WhatsApp de forma rápida e prática.';
-    
-    // A melhoria da imagem Hero de forma segura:
-    const heroStyle = tenantSettings.hero_image_url
-      ? `style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('${tenantSettings.hero_image_url}'); background-size: cover; background-position: center;"`
-      : 'style="background: linear-gradient(to right, #3b82f6, #6366f1);"'; // Fallback se não houver imagem
-
-    const storePhone = tenantSettings.whatsapp_number || 'Não informado';
-    const storeAddress = tenantSettings.address || 'Atendimento Online / Retirada a Combinar';
-
-    const formatCurrency = (value) =>
-      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  renderSkeleton() {
     return `
-      <!-- O CABEÇALHO ANTIGO FOI REMOVIDO DAQUI PARA ACABAR COM O BUG DA DUPLICIDADE -->
-
-     <section class="w-full h-[400px] flex items-center justify-center text-center px-4" ${heroStyle}>
-  <div class="max-w-4xl mx-auto space-y-4 px-4">
-    <h2 class="text-4xl md:text-6xl font-black tracking-tight text-white uppercase drop-shadow-lg leading-tight">
-      ${heroTitle}
-    </h2>
-    
-    <p class="text-lg md:text-xl text-white font-medium max-w-xl mx-auto drop-shadow-md leading-relaxed">
-      ${heroSubtitle}
-    </p>
-  </div>
-</section>
-      
-
-      <main class="max-w-6xl mx-auto px-4 py-8 space-y-8">
-        
-        <!-- BARRA DE FILTRAGEM POR CATEGORIAS -->
-        <section class="space-y-3">
-          <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Categorias</h3>
-          <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none" id="categories-filter-bar">
-            <button 
-              data-category-id="all" 
-              class="js-category-btn px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap shadow-sm border ${!this.selectedCategoryId ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-100 hover:bg-gray-50'}"
-            >
-              Todos os Itens
-            </button>
-            ${categories.map(cat => {
-              const isActive = this.selectedCategoryId === cat.id;
-              return `
-                <button 
-                  data-category-id="${cat.id}" 
-                  class="js-category-btn px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap shadow-sm border ${isActive ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-100 hover:bg-gray-50'}"
-                >
-                  ${cat.name}
-            </button>`;
-
-    }).join('')}
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-pulse">
+        ${Array(8).fill(0).map(() => `
+          <div class="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col space-y-3 shadow-sm">
+            <div class="w-full aspect-square bg-gray-200 rounded-xl"></div>
+            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+            <div class="h-9 bg-gray-200 rounded-lg w-full mt-2"></div>
           </div>
-        </section>
-
-        <!-- LISTAGEM DE PRODUTOS -->
-        <section class="space-y-4">
-          <div class="flex justify-between items-center">
-            <h3 class="text-xl font-black text-gray-800 tracking-tight">Cardápio / Catálogo</h3>
-          </div>
-          
-          <div id="products-grid-container" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            ${this.renderProductsHTML(this.allProducts, formatCurrency)}
-          </div>
-        </section>
-
-      </main>
-
-      <!-- FOOTER COMPLETO COM REDES, CONTATO E ENDEREÇO -->
-      <footer class="bg-white border-t border-gray-200 mt-16 py-10 px-4">
-        <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 border-b border-gray-100 pb-8">
-          
-          <!-- Coluna 1: Endereço -->
-          <div class="space-y-2">
-            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Nosso Endereço</h4>
-            <p class="text-sm text-gray-600 font-medium leading-relaxed">
-              ${storeAddress}
-            </p>
-          </div>
-
-          <!-- Coluna 2: Contato -->
-          <div class="space-y-2">
-            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Canais de Contato</h4>
-            <p class="text-sm text-gray-600 font-medium">
-              <strong>WhatsApp / Tel:</strong> ${storePhone}
-            </p>
-          </div>
-
-          <!-- Coluna 3: Redes Sociais (Apenas Ícones) -->
-          <div class="space-y-2">
-            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Siga-nos nas Redes</h4>
-            <div class="flex items-center gap-3 pt-1">
-              
-              ${tenantSettings.instagram_url ? `
-                <a href="${tenantSettings.instagram_url}" target="_blank" rel="noopener noreferrer" 
-                   class="p-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl text-gray-600 hover:text-black transition-all flex items-center justify-center" 
-                   title="Instagram">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
-                  </svg>
-                </a>
-              ` : ''}
-
-              ${tenantSettings.facebook_url ? `
-                <a href="${tenantSettings.facebook_url}" target="_blank" rel="noopener noreferrer" 
-                   class="p-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl text-gray-600 hover:text-black transition-all flex items-center justify-center" 
-                   title="Facebook">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/>
-                  </svg>
-                </a>
-              ` : ''}
-
-            </div>
-          </div>
-        </div>
-
-        <!-- Créditos Inferiores -->
-        <div class="max-w-6xl mx-auto pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-400">
-          <p>&copy; 2026 ${storeName}. Todos os direitos reservados.</p>
-          
-          <a href="/?page=admin" class="hover:underline opacity-60 hover:opacity-100 transition-opacity">
-            Área do Lojista
-          </a>
-        </div>
-      </footer>
-    `;
-  },
-  // 1. ADICIONE ESSA FUNÇÃO AQUI (O MODAL)
-  openOptionModal(prod) {
-    // Adiciona a lógica de cores aqui
-    const colorsHTML = prod.colors && prod.colors.length > 0 
-      ? `<div class="mt-4">
-           <p class="text-xs font-bold text-gray-400 uppercase mb-2">Selecione a cor:</p>
-           <div class="flex flex-wrap gap-2">
-             ${prod.colors.map(color => `
-               <button class="color-btn border-2 border-gray-200 px-3 py-1 rounded-lg text-sm font-bold hover:border-primary transition" data-color="${color}">
-                 ${color}
-               </button>
-             `).join('')}
-           </div>
-         </div>` 
-      : '';
-
-    const modalHTML = `
-      <div id="option-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white p-6 rounded-2xl w-full max-w-sm shadow-xl space-y-4">
-          <h3 class="font-bold text-gray-800 text-lg">Selecione as opções:</h3>
-          <p class="text-sm text-gray-600">${prod.title}</p>
-          
-          <div class="flex flex-wrap gap-2">
-            ${prod.attributes.map(attr => `
-              <button class="size-btn border-2 border-primary text-primary px-4 py-2 rounded-lg font-bold hover:bg-primary hover:text-white transition">
-                ${attr}
-              </button>
-            `).join('')}
-          </div>
-          
-          ${colorsHTML}
-          
-          <button id="confirm-modal" class="w-full bg-primary text-white font-bold py-2 rounded-xl mt-4">Confirmar</button>
-          <button id="close-modal" class="text-gray-400 text-sm underline w-full pt-2">Cancelar</button>
-        </div>
+        `).join('')}
       </div>
     `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-    let selectedSize = null;
-    let selectedColor = null;
-
-    // Seleção de tamanho
-    document.querySelectorAll('.size-btn').forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('bg-primary', 'text-white'));
-        btn.classList.add('bg-primary', 'text-white');
-        selectedSize = btn.innerText;
-      };
-    });
-
-    // Seleção de cor
-    document.querySelectorAll('.color-btn').forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('border-primary', 'text-primary'));
-        btn.classList.add('border-primary', 'text-primary');
-        selectedColor = btn.getAttribute('data-color');
-      };
-    });
-
-    document.getElementById('confirm-modal').onclick = () => {
-      if(!selectedSize) return alert("Selecione um tamanho!");
-      window.dispatchEvent(new CustomEvent('global:add-to-cart', {
-        detail: { id: prod.id, size: selectedSize, color: selectedColor || 'N/A' }
-      }));
-      document.getElementById('option-modal').remove();
-    };
-
-    document.getElementById('close-modal').onclick = () => document.getElementById('option-modal').remove();
   },
 
-  // 2. ATUALIZE O SEU BINDATTCARTBUTTONS COM ESTA LÓGICA
-  bindAddToCartButtons(targetContainer) {
-    targetContainer.querySelectorAll('.js-add-to-cart').forEach(btn => {
-      btn.onclick = (e) => {
-        e.preventDefault();
-        const id = btn.getAttribute('data-id');
-        const prod = this.allProducts.find(p => p.id === id);
+  async render() {
+    try {
+      const [
+        { data: products },
+        { data: categories },
+        { data: tenantSettings }
+      ] = await Promise.all([
+        api.products.getAll({ storefrontOnly: true }),
+        api.categories.getAll(),
+        api.tenant.get()
+      ]);
 
-        // Verifica se o produto tem atributos (tamanhos)
-        if (prod && prod.attributes && prod.attributes.length > 0) {
-          this.openOptionModal(prod);
-        } else {
-          // Se não tiver, adiciona direto
-          window.dispatchEvent(new CustomEvent('global:add-to-cart', { detail: { id } }));
-        }
-      };
-    });
-  },
+      const isStoreOpen = tenantSettings?.is_open !== false;
 
-  // Redesenha estritamente o grid de cards sem remontar a estrutura da página
-  renderProductsHTML(products, formatCurrency) {
-    const filtered = this.selectedCategoryId
-      ? products.filter(p => p.category_id === this.selectedCategoryId)
-      : products;
-
-    if (filtered.length === 0) {
       return `
-        <div class="col-span-full text-center py-12 text-gray-400 text-sm">
-          Nenhum produto disponível nesta categoria no momento.
+        <div class="min-h-screen bg-gray-50 pb-16">
+          ${!isStoreOpen ? `
+            <div class="bg-amber-500 text-white text-center py-2 px-4 font-semibold text-sm shadow-inner flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+              No momento nossa loja está fechada para novos pedidos.
+            </div>
+          ` : ''}
+
+          <!-- HERO SECTION -->
+          <div class="relative bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-12 md:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-lg">
+            <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            <div class="max-w-6xl mx-auto relative z-10 flex flex-col items-center text-center">
+              <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight mb-3 drop-shadow-md">
+                ${tenantSettings?.store_name || 'Bem-vindo à nossa Loja'}
+              </h1>
+              <p class="text-base md:text-lg text-gray-300 max-w-2xl mb-2">
+                Explore as melhores ofertas e produtos de alta qualidade com entrega rápida.
+              </p>
+              
+              <!-- SEARCH BAR -->
+              <div class="w-full max-w-xl mx-auto mt-6 relative">
+                <input
+                  type="text"
+                  id="search-input"
+                  placeholder="Buscar produtos por nome ou descrição..."
+                  class="w-full pl-11 pr-5 py-3 rounded-full text-gray-800 bg-white shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500 transition text-sm"
+                />
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CATEGORIES BAR (STICKY) -->
+          <div class="sticky top-16 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
+            <div class="max-w-6xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto scrollbar-none items-center" id="categories-container">
+              <button class="category-btn active bg-gray-900 text-white px-4 py-2 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap transition shadow-sm" data-category="">
+                Todos os Produtos
+              </button>
+              ${categories?.map(c => `
+                <button class="category-btn bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2 rounded-full text-xs md:text-sm font-semibold whitespace-nowrap transition-colors" data-category="${c.id}">
+                  ${c.name}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- PRODUCT LISTING -->
+          <main class="max-w-6xl mx-auto px-4 mt-8">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl md:text-2xl font-bold text-gray-800 tracking-tight" id="section-title">
+                Produtos em Destaque
+              </h2>
+              <span class="text-sm text-gray-500 font-medium" id="product-count">
+                ${products?.length || 0} produtos encontrados
+              </span>
+            </div>
+
+            <!-- PRODUCT GRID -->
+            <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 transition-opacity duration-300">
+              ${this.renderProductsHTML(products)}
+            </div>
+          </main>
+        </div>
+      `;
+    } catch (error) {
+      console.error('Erro ao renderizar Home:', error);
+      return `<div class="p-8 text-center text-red-600 font-bold">Erro ao carregar vitrine.</div>`;
+    }
+  },
+
+  renderProductsHTML(products) {
+    if (!products || products.length === 0) {
+      return `
+        <div class="col-span-full py-16 text-center text-gray-500 bg-white rounded-2xl shadow-sm border border-dashed border-gray-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          </svg>
+          <p class="text-lg font-semibold">Nenhum produto encontrado</p>
+          <p class="text-xs text-gray-400 mt-1">Tente ajustar a busca ou filtrar por outra categoria.</p>
         </div>
       `;
     }
 
-    return filtered.map(prod => {
-      const hasPromo = prod.promo_price && prod.promo_price < prod.price;
-
-      // Lógica para tratar os tamanhos (JSON no banco)
-      const attributes = Array.isArray(prod.attributes) ? prod.attributes : [];
+    return products.map(product => {
+      const hasPromo = product.promo_price && product.promo_price < product.price;
+      const discount = hasPromo ? Math.round(((product.price - product.promo_price) / product.price) * 100) : 0;
 
       return `
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col justify-between group hover:shadow-md transition">
-          <div class="relative overflow-hidden aspect-square bg-gray-50">
-            <img src="${prod.image_url}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" alt="${prod.title}" />
-            ${hasPromo ? `<span class="absolute top-2 left-2 bg-red-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full uppercase shadow-sm">Promoção</span>` : ''}
+        <div class="shadow-sm hover:shadow-md transition-shadow border border-gray-100 rounded-2xl bg-white flex flex-col group overflow-hidden">
+          <div class="relative aspect-square w-full overflow-hidden rounded-t-2xl bg-gray-100">
+            ${hasPromo ? `
+              <span class="absolute top-3 left-3 z-10 bg-red-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm">
+                ${discount}% OFF
+              </span>
+            ` : ''}
+            <img
+              src="${product.image_url}"
+              alt="${product.title}"
+              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1560343090-f0409e92791a?auto=format&fit=crop&w=600&q=80';"
+              class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+            />
           </div>
-          
-          <div class="p-3 flex-grow flex flex-col justify-between space-y-2">
+
+          <div class="p-4 flex flex-col flex-1 justify-between space-y-3">
             <div>
-              <h4 class="text-sm font-bold text-gray-800 leading-tight">${prod.title}</h4>
-              
-              ${prod.description ? `<p class="text-[11px] text-gray-500 mt-1 line-clamp-2">${prod.description}</p>` : ''}
-              
-              ${attributes.length > 0 ? `
-                <div class="mt-2 flex flex-wrap gap-1">
-                  ${attributes.map(attr => `<span class="text-[9px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 font-bold uppercase">${attr}</span>`).join('')}
-                </div>
-              ` : ''}
+              <h3 class="font-bold text-gray-800 text-sm md:text-base line-clamp-1 mb-1">
+                ${product.title}
+              </h3>
+              <p class="text-xs text-gray-500 line-clamp-2">
+                ${product.description || ''}
+              </p>
             </div>
-            
-            <div class="space-y-2">
-              <div class="flex flex-col">
+
+            <div>
+              <div class="flex items-baseline gap-2 mb-3">
                 ${hasPromo ? `
-                  <span class="text-xs text-gray-400 line-through">${formatCurrency(prod.price)}</span>
-                  <span class="text-base font-black text-red-600">${formatCurrency(prod.promo_price)}</span>
+                  <span class="text-base font-extrabold text-red-600">R$ ${product.promo_price.toFixed(2)}</span>
+                  <span class="text-xs text-gray-400 line-through">R$ ${product.price.toFixed(2)}</span>
                 ` : `
-                  <span class="text-base font-black text-gray-900">${formatCurrency(prod.price)}</span>
+                  <span class="text-base font-extrabold text-gray-900">R$ ${product.price.toFixed(2)}</span>
                 `}
               </div>
-              
-              <button data-id="${prod.id}" class="js-add-to-cart w-full bg-primary text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition hover:bg-opacity-95 shadow-sm">
-                Adicionar
+
+              <button
+                class="add-to-cart-btn w-full bg-gray-900 hover:bg-black text-white text-xs py-2.5 px-4 rounded-xl font-bold transition flex items-center justify-center gap-1.5"
+                data-id="${product.id}"
+                data-sizes='${JSON.stringify(product.sizes || [])}'
+                data-colors='${JSON.stringify(product.colors || [])}'
+              >
+                <span>Adicionar ao Carrinho</span>
               </button>
             </div>
           </div>
@@ -297,48 +177,89 @@ export const Home = {
   },
 
   bindEvents(container) {
-    const formatCurrency = (value) =>
-      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    if (!container) return;
 
-    const gridContainer = container.querySelector('#products-grid-container');
+    let selectedCategory = '';
+    let searchQuery = '';
 
-    container.querySelectorAll('.js-category-btn').forEach(btn => {
-      btn.onclick = () => {
-        const catId = btn.getAttribute('data-category-id');
-        this.selectedCategoryId = catId === 'all' ? null : catId;
+    const filterProducts = async () => {
+      const grid = container.querySelector('#product-grid');
+      const countSlot = container.querySelector('#product-count');
+      if (grid) {
+        grid.innerHTML = this.renderSkeleton();
+      }
 
-        container.querySelectorAll('.js-category-btn').forEach(b => {
-          b.className = "js-category-btn px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap shadow-sm border bg-white text-gray-600 border-gray-100 hover:bg-gray-50";
+      const { data: products } = await api.products.getAll({
+        categoryId: selectedCategory,
+        searchQuery: searchQuery,
+        storefrontOnly: true
+      });
+
+      if (grid) {
+        grid.innerHTML = this.renderProductsHTML(products);
+        this.bindProductButtons(container);
+      }
+
+      if (countSlot) {
+        countSlot.innerText = `${products?.length || 0} produtos encontrados`;
+      }
+
+      Toast.show('Filtro aplicado.', 'info');
+    };
+
+    // Filtro de Categorias
+    const catButtons = container.querySelectorAll('.category-btn');
+    catButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        catButtons.forEach(b => {
+          b.classList.remove('bg-gray-900', 'text-white', 'shadow-sm');
+          b.classList.add('bg-gray-100', 'text-gray-600');
         });
-        btn.className = "js-category-btn px-4 py-2 rounded-xl text-sm font-bold transition whitespace-nowrap shadow-sm border bg-primary text-white border-primary";
+        btn.classList.remove('bg-gray-100', 'text-gray-600');
+        btn.classList.add('bg-gray-900', 'text-white', 'shadow-sm');
 
-        if (gridContainer) {
-          gridContainer.innerHTML = this.renderProductsHTML(this.allProducts, formatCurrency);
-          this.bindAddToCartButtons(gridContainer);
-        }
-      };
+        selectedCategory = btn.getAttribute('data-category');
+        filterProducts();
+      });
     });
 
-    this.bindAddToCartButtons(container);
+    // Busca com Debounce leve
+    const searchInput = container.querySelector('#search-input');
+    if (searchInput) {
+      let timeout = null;
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          searchQuery = e.target.value.trim();
+          filterProducts();
+        }, 300);
+      });
+    }
+
+    this.bindProductButtons(container);
   },
 
-  // Dentro do seu Home.js, na função bindAddToCartButtons
-  bindAddToCartButtons(targetContainer) {
-    targetContainer.querySelectorAll('.js-add-to-cart').forEach(btn => {
-      btn.onclick = (e) => {
-        e.preventDefault();
+  bindProductButtons(container) {
+    const addBtns = container.querySelectorAll('.add-to-cart-btn');
+    addBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
         const id = btn.getAttribute('data-id');
-        const prod = this.allProducts.find(p => p.id === id);
+        const sizes = JSON.parse(btn.getAttribute('data-sizes') || '[]');
+        const colors = JSON.parse(btn.getAttribute('data-colors') || '[]');
 
-        // Se tiver atributos (tamanhos), abre o modal de escolha
-        if (prod.attributes && prod.attributes.length > 0) {
-          this.openOptionModal(prod);
-        } else {
-          // Se não tiver, adiciona direto
-          window.dispatchEvent(new CustomEvent('global:add-to-cart', { detail: { id } }));
-        }
-      };
+        // Micro interatividade visual
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<span class="text-emerald-400">✓ Adicionado!</span>`;
+        setTimeout(() => { btn.innerHTML = originalText; }, 1500);
+
+        window.dispatchEvent(new CustomEvent('global:add-to-cart', {
+          detail: {
+            id,
+            size: sizes.length > 0 ? sizes[0] : 'N/A',
+            color: colors.length > 0 ? colors[0] : 'N/A'
+          }
+        }));
+      });
     });
   }
-
 };

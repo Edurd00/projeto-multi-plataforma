@@ -1,403 +1,418 @@
-import { supabase } from '../../config/supabase.js';
-import { injectTheme } from '../../config/theme.js';
+import { api } from '../../services/api.js';
 
 export const Dashboard = {
-  async render() {
-    // 1. Busca todos os dados em paralelo direto do Supabase
-    const [ordersRes, productsRes, categoriesRes, tenantRes] = await Promise.all([
-      supabase.from('orders').select('*').order('created_at', { ascending: false }),
-      supabase.from('products').select('*, categories(name)').order('created_at', { ascending: false }),
-      supabase.from('categories').select('*').order('name', { ascending: true }),
-      supabase.from('tenant_settings').select('*').maybeSingle()
-    ]);
-
-    const orders = ordersRes.data || [];
-    const products = productsRes.data || [];
-    const categories = categoriesRes.data || [];
-    const tenant = tenantRes.data || {};
-
-    const formatCurrency = (value) =>
-      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-
-    return `
-      <div class="min-h-screen bg-gray-100 p-6">
-        <div class="max-w-6xl mx-auto space-y-8">
-          
-          <!-- CABEÇALHO ADMIN -->
-          <div class="flex justify-between items-center border-b pb-4 border-gray-200">
-            <div>
-              <h1 class="text-3xl font-black text-gray-900 tracking-tight">Painel de Controle</h1>
-              <p class="text-sm text-gray-500">Gerenciamento da Loja: <strong>${tenant.store_name || 'Não configurada'}</strong></p>
-            </div>
-            <a href="/" class="bg-gray-800 hover:bg-gray-900 text-white font-medium px-4 py-2 rounded-xl text-sm transition shadow-sm">
-              Voltar para Vitrine
-            </a>
-          </div>
-
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <!-- COLUNA ESQUERDA: CONFIGURAÇÕES E CADASTROS -->
-            <div class="space-y-6 lg:col-span-1">
-              
-              <!-- FORMULÁRIO 1: CONFIGURAÇÃO DO TENANT (IDENTIDADE + REDES SOCIAIS) -->
-              <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 space-y-4">
-                <h3 class="font-bold text-gray-800 text-base border-b pb-2">Configurações da Loja</h3>
-                <form id="admin-tenant-form" class="space-y-3">
-                  <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome da Marca</label>
-                    <input type="text" id="conf-name" value="${tenant.store_name || ''}" required class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-                  </div>
-                  <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL do Logotipo</label>
-                    <input type="url" id="conf-logo" value="${tenant.logo_url || ''}" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="https://linkdaimagem.com/logo.png" />
-                  </div>
-                  <!-- Dentro do seu formulário admin-tenant-form, abaixo do conf-hero-subtitle -->
-                  <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL da Imagem da Hero</label>
-                    <input type="url" id="conf-hero-image" value="${tenant.hero_image_url || ''}" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="https://linkdaimagem.com/imagem-hero.jpg" />
-                  </div>
-                  <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Título do Banner (Hero)</label>
-                    <input type="text" id="conf-hero-title" value="${tenant.hero_title || ''}" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Título da Hero" />
-                  </div>
-                  <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Subtítulo do Banner (Hero)</label>
-                    <textarea id="conf-hero-subtitle" class="w-full border rounded-lg p-2 text-sm h-16 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Subtítulo da Hero">${tenant.hero_subtitle || ''}</textarea>
-                  </div>
-                  <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">WhatsApp de Destino</label>
-                    <input type="text" id="conf-phone" value="${tenant.whatsapp_number || ''}" required class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-                  </div>
-                  
-                  <!-- CAMPOS: REDES SOCIAIS -->
-                  <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Link do Instagram</label>
-                    <input type="url" id="conf-instagram" value="${tenant.instagram_url || ''}" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="https://instagram.com/sualoja" />
-                  </div>
-                  <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Link do Facebook</label>
-                    <input type="url" id="conf-facebook" value="${tenant.facebook_url || ''}" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="https://facebook.com/sualoja" />
-                  </div>
-
-                  <!-- NOVO CAMPO: ENDEREÇO DA LOJA -->
-                  <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Endereço de Operação / Retirada</label>
-                    <input type="text" id="conf-address" value="${tenant.address || ''}" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ex: Av. Paulista, 1000 - São Paulo, SP" />
-                  </div>
-
-                  <div class="grid grid-cols-2 gap-2">
-                    <div>
-                      <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cor Primária</label>
-                      <input type="color" id="conf-primary" value="${tenant.primary_color || '#3b82f6'}" class="w-full h-9 rounded-lg border p-1 cursor-pointer" />
-                    </div>
-                    <div>
-                      <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Cor Secundária</label>
-                      <input type="color" id="conf-secondary" value="${tenant.secondary_color || '#1e3a8a'}" class="w-full h-9 rounded-lg border p-1 cursor-pointer" />
-                    </div>
-                  </div>
-                  <button type="submit" class="w-full bg-primary text-white font-bold py-2 rounded-xl text-sm transition hover:bg-opacity-90 shadow-sm mt-2">
-                    Salvar Identidade
-                  </button>
-                </form>
-              </div>
-
-              <!-- FORMULÁRIO 2: GERENCIAR/ADICIONAR CATEGORIAS -->
-              <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 space-y-4">
-                <h3 class="font-bold text-gray-800 text-base border-b pb-2">Categorias do Menu</h3>
-                
-                <form id="admin-category-form" class="flex gap-2">
-                  <input type="text" id="cat-name" required class="flex-grow border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Ex: Bebidas, Roupas, etc." />
-                  <button type="submit" class="bg-primary text-white font-bold px-4 rounded-lg text-sm hover:bg-opacity-90 transition shadow-sm">
-                    +
-                  </button>
-                </form>
-
-                <div class="space-y-2 max-h-[20vh] overflow-y-auto pr-1">
-                  ${categories.map(cat => `
-                    <div class="flex items-center justify-between border rounded-lg p-2 bg-gray-50 text-sm">
-                      <span class="font-medium text-gray-700">${cat.name}</span>
-                      <button data-category-id="${cat.id}" class="js-delete-category text-red-500 hover:text-red-700 p-1 rounded-md transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                      </button>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-
-              <!-- FORMULÁRIO DE CADASTRO DE PRODUTO (ATUALIZADO) -->
-              <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 space-y-4">
-                <h3 class="font-bold text-gray-800 text-base border-b pb-2">Cadastrar Novo Produto</h3>
-                <form id="admin-product-form" class="space-y-3">
-                  <input type="text" id="prod-title" required class="w-full border rounded-lg p-2 text-sm" placeholder="Título do Produto" />
-                  
-                  <select id="prod-category" required class="w-full border rounded-lg p-2 text-sm">
-                    <option value="" disabled selected>Selecione uma categoria</option>
-                    ${categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
-                  </select>
-
-                  <textarea id="prod-description" class="w-full border rounded-lg p-2 text-sm h-20" placeholder="Descrição detalhada do produto..."></textarea>
-                  
-                  <input type="text" id="prod-attributes" class="w-full border rounded-lg p-2 text-sm" placeholder="Tamanhos ou Variações (ex: P, M, G, GG)" />
-                  <p class="text-[10px] text-gray-400">Separe os tamanhos por vírgula.</p>
-                  <input type="text" id="prod-colors" class="w-full border rounded-lg p-2 text-sm" placeholder="Cores (ex: Preto, Branco, Azul)" />
-                  <p class="text-[10px] text-gray-400">Separe as cores por vírgula.</p>
-                  <div class="grid grid-cols-2 gap-2">
-                    <input type="number" step="0.01" id="prod-price" required class="w-full border rounded-lg p-2 text-sm" placeholder="Preço" />
-                    <input type="number" step="0.01" id="prod-promo" class="w-full border rounded-lg p-2 text-sm" placeholder="Promoção" />
-                  </div>
-                  
-                  <input type="url" id="prod-image" class="w-full border rounded-lg p-2 text-sm" placeholder="URL da Imagem" />
-                  <input type="number" step="0.01" id="prod-shipping" class="w-full border rounded-lg p-2 text-sm" placeholder="Frete (0 para Grátis)" />
-                  
-                  <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 rounded-xl text-sm">Adicionar ao Catálogo</button>
-                </form>
-              </div>
-
-            </div>
-
-            <!-- COLUNA DIREITA: PEDIDOS E GERENCIAMENTO DE PRODUTOS -->
-            <div class="space-y-6 lg:col-span-2">
-              
-              <!-- SEÇÃO DE PEDIDOS -->
-              <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 space-y-4">
-                <div class="flex justify-between items-center border-b pb-2">
-                  <h3 class="font-bold text-gray-800 text-base">Últimos Pedidos Recebidos</h3>
-                  <span class="bg-gray-100 text-gray-600 font-bold px-2.5 py-0.5 rounded-full text-xs">${orders.length} pedidos</span>
-                </div>
-
-                <div class="space-y-3 max-h-[40vh] overflow-y-auto pr-1">
-                  ${orders.length === 0 ? `
-                    <div class="text-center py-8 text-gray-400 text-sm">Nenhum pedido efetuado ainda.</div>
-                  ` : orders.map(ord => {
-      const date = new Date(ord.created_at).toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      return `
-                        <div class="border rounded-xl p-4 bg-gray-50 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
-                          <div class="space-y-1">
-                            <div class="flex items-center gap-2">
-                              <span class="text-sm font-black text-gray-800">#${ord.id.slice(0, 6).toUpperCase()}</span>
-                              <span class="text-xs text-gray-400">${date}</span>
-                            </div>
-                            <p class="text-sm text-gray-700"><strong>Cliente:</strong> ${ord.customer_name} (${ord.customer_phone})</p>
-                            <p class="text-xs text-gray-500 line-clamp-1"><strong>Envio:</strong> ${ord.delivery_address || 'Retirada'}</p>
-                            <p class="text-xs text-primary font-medium">Pagamento via: ${ord.payment_method}</p>
-                          </div>
-                          <div class="flex md:flex-col items-end justify-between w-full md:w-auto border-t md:border-t-0 pt-2 md:pt-0">
-                            <span class="text-base font-black text-gray-900 mb-1">${formatCurrency(ord.total_amount)}</span>
-                            <select data-order-id="${ord.id}" class="js-status-changer border text-xs font-bold rounded-lg p-1.5 bg-white shadow-sm focus:outline-none">
-                              <option value="pending" ${ord.status === 'pending' ? 'selected' : ''}>Pendente</option>
-                              <option value="confirmed" ${ord.status === 'confirmed' ? 'selected' : ''}>Confirmado</option>
-                              <option value="shipped" ${ord.status === 'shipped' ? 'selected' : ''}>Despachado</option>
-                              <option value="cancelled" ${ord.status === 'cancelled' ? 'selected' : ''}>Cancelado</option>
-                            </select>
-                          </div>
-                        </div>
-                      `;
-    }).join('')}
-                </div>
-              </div>
-
-              <!-- GERENCIAR PRODUTOS DO CATÁLOGO -->
-              <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 space-y-4">
-                <div class="flex justify-between items-center border-b pb-2">
-                  <h3 class="font-bold text-gray-800 text-base">Produtos no Catálogo</h3>
-                  <span class="bg-gray-100 text-gray-600 font-bold px-2.5 py-0.5 rounded-full text-xs">${products.length} itens</span>
-                </div>
-
-                <div class="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
-                  ${products.length === 0 ? `
-                    <div class="text-center py-8 text-gray-400 text-sm">Nenhum produto cadastrado.</div>
-                  ` : products.map(prod => {
-      const finalPrice = prod.promo_price || prod.price;
-      return `
-                        <div class="flex items-center justify-between border rounded-xl p-3 bg-gray-50 hover:bg-gray-100 transition">
-                          <div class="flex items-center gap-3">
-                            <img src="${prod.image_url}" class="w-10 h-10 object-cover rounded-lg bg-white border" alt="${prod.title}" />
-                            <div>
-                              <h4 class="text-sm font-bold text-gray-800 line-clamp-1">${prod.title}</h4>
-                              <p class="text-xs text-gray-400">${prod.categories?.name || 'Geral'} • <span class="text-gray-600 font-medium">${formatCurrency(finalPrice)}</span></p>
-                            </div>
-                          </div>
-                          <button data-product-id="${prod.id}" class="js-delete-product p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
-                        </div>
-                      `;
-    }).join('')}
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      </div>
-    `;
+  state: {
+    expandedId: null,
+    editingProductId: null
   },
 
-  bindEvents(container, onRefresh) {
-    const tenantForm = container.querySelector('#admin-tenant-form');
-    const categoryForm = container.querySelector('#admin-category-form');
-    const productForm = container.querySelector('#admin-product-form');
+  async render() {
+    try {
+      const [
+        { data: orders },
+        { data: products },
+        { data: categories },
+        { data: tenantSettings }
+      ] = await Promise.all([
+        api.orders.getAll(),
+        api.products.getAll(),
+        api.categories.getAll(),
+        api.tenant.get()
+      ]);
 
-    // 1. Ouvinte para atualização das configurações da Loja + Redes Sociais + Endereço
+      const pendingOrders = orders?.filter(o => o.status === 'pending') || [];
+      const preparingOrders = orders?.filter(o => o.status === 'preparing') || [];
+      const shippedOrders = orders?.filter(o => o.status === 'shipped' || o.status === 'completed') || [];
+
+      return `
+        <div class="min-h-screen bg-gray-100 pb-12">
+          <!-- TOP HEADER -->
+          <header class="bg-white border-b sticky top-0 z-40 px-6 py-4 shadow-sm flex items-center justify-between">
+            <div>
+              <h1 class="text-xl font-black text-gray-900 tracking-tight">Painel de Controle - Admin</h1>
+              <p class="text-xs text-gray-500">Gerencie produtos, pedidos e configurações da loja</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <a href="?" class="text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg transition">
+                🌐 Ver Loja Live
+              </a>
+            </div>
+          </header>
+
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+
+            <!-- CONFIGURAÇÕES DA LOJA -->
+            <section class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                ⚙️ Configurações Principais
+              </h2>
+              <form id="tenant-form" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nome da Loja</label>
+                  <input type="text" id="tenant-name" value="${tenantSettings?.store_name || ''}" class="w-full border rounded-lg px-3 py-2 text-sm" required />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Telefone WhatsApp</label>
+                  <input type="text" id="tenant-phone" value="${tenantSettings?.phone || ''}" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="11999999999" required />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Status da Loja</label>
+                  <select id="tenant-status" class="w-full border rounded-lg px-3 py-2 text-sm">
+                    <option value="open" ${tenantSettings?.is_open !== false ? 'selected' : ''}>🟢 Aberta para Pedidos</option>
+                    <option value="closed" ${tenantSettings?.is_open === false ? 'selected' : ''}>🔴 Fechada Temporariamente</option>
+                  </select>
+                </div>
+                <div class="md:col-span-3 flex justify-end">
+                  <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-lg text-sm transition shadow">
+                    Salvar Configurações
+                  </button>
+                </div>
+              </form>
+            </section>
+
+            <!-- KANBAN DE PEDIDOS -->
+            <section class="space-y-4">
+              <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                📋 Central de Pedidos (${orders?.length || 0})
+              </h2>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- NOVOS -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-amber-200">
+                  <h3 class="font-bold text-amber-800 text-sm mb-3 flex items-center justify-between">
+                    <span>📥 Novos (${pendingOrders.length})</span>
+                  </h3>
+                  <div class="space-y-3">
+                    ${this.renderOrderCards(pendingOrders, 'pending')}
+                  </div>
+                </div>
+
+                <!-- EM PREPARO -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-blue-200">
+                  <h3 class="font-bold text-blue-800 text-sm mb-3 flex items-center justify-between">
+                    <span>🍳 Em Preparo (${preparingOrders.length})</span>
+                  </h3>
+                  <div class="space-y-3">
+                    ${this.renderOrderCards(preparingOrders, 'preparing')}
+                  </div>
+                </div>
+
+                <!-- CONCLUÍDOS / SAIU PARA ENTREGA -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-emerald-200">
+                  <h3 class="font-bold text-emerald-800 text-sm mb-3 flex items-center justify-between">
+                    <span>🚚 Entregues/Enviados (${shippedOrders.length})</span>
+                  </h3>
+                  <div class="space-y-3">
+                    ${this.renderOrderCards(shippedOrders, 'shipped')}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- GESTÃO DE PRODUTOS & CATEGORIAS -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+              <!-- FORMULÁRIO DE PRODUTO -->
+              <div class="lg:col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100 h-fit" id="product-form-container">
+                <h2 class="text-lg font-bold text-gray-900 mb-4" id="form-title">
+                  ➕ Cadastrar Produto
+                </h2>
+                <form id="product-form" class="space-y-4">
+                  <input type="hidden" id="prod-id" value="" />
+                  
+                  <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Título do Produto</label>
+                    <input type="text" id="prod-title" required class="w-full border rounded-lg px-3 py-2 text-sm" />
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Preço (R$)</label>
+                      <input type="number" step="0.01" id="prod-price" required class="w-full border rounded-lg px-3 py-2 text-sm" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Preço Promo (R$)</label>
+                      <input type="number" step="0.01" id="prod-promo-price" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Opcional" />
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Categoria</label>
+                      <select id="prod-category" class="w-full border rounded-lg px-3 py-2 text-sm" required>
+                        <option value="">Selecione...</option>
+                        ${categories?.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                        <option value="new">+ Criar Nova</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Estoque Quantidade</label>
+                      <input type="number" id="prod-stock" value="10" required class="w-full border rounded-lg px-3 py-2 text-sm" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">URL da Imagem</label>
+                    <input type="url" id="prod-image" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="https://..." />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Descrição</label>
+                    <textarea id="prod-desc" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm"></textarea>
+                  </div>
+
+                  <div class="flex items-center gap-4 text-xs font-bold text-gray-700">
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" id="prod-featured" class="rounded text-blue-600" /> Destaque na Vitrine
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" id="prod-active" checked class="rounded text-blue-600" /> Ativo
+                    </label>
+                  </div>
+
+                  <div class="flex gap-2">
+                    <button type="submit" id="submit-prod-btn" class="flex-1 bg-gray-900 hover:bg-black text-white font-bold py-2.5 rounded-lg text-sm transition">
+                      Salvar Produto
+                    </button>
+                    <button type="button" id="cancel-edit-btn" class="hidden bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-4 py-2.5 rounded-lg text-sm transition">
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- LISTA DE PRODUTOS -->
+              <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center justify-between">
+                  <span>📦 Catálogo de Produtos (${products?.length || 0})</span>
+                </h2>
+
+                <div class="space-y-3">
+                  ${products && products.length > 0 ? products.map(p => `
+                    <div class="border rounded-xl p-3 flex items-center justify-between hover:border-gray-300 transition bg-white">
+                      <div class="flex items-center gap-3">
+                        <img
+                          src="${p.image_url}"
+                          alt="${p.title}"
+                          onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1560343090-f0409e92791a?auto=format&fit=crop&w=600&q=80';"
+                          class="w-12 h-12 rounded-lg object-cover bg-gray-100"
+                        />
+                        <div>
+                          <div class="flex items-center gap-2">
+                            <h4 class="font-bold text-gray-800 text-sm">${p.title}</h4>
+                            ${p.stock <= 3 ? `
+                              <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                ⚠️ Estoque Crítico: ${p.stock} un
+                              </span>
+                            ` : ''}
+                          </div>
+                          <p class="text-xs text-gray-500">R$ ${p.price.toFixed(2)} | Estoque: ${p.stock}</p>
+                        </div>
+                      </div>
+
+                      <div class="flex items-center gap-2">
+                        <button
+                          class="edit-prod-btn text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold px-3 py-1.5 rounded-lg transition"
+                          data-product='${JSON.stringify(p)}'
+                        >
+                          Editar
+                        </button>
+                        <button
+                          class="delete-prod-btn text-xs bg-red-50 text-red-600 hover:bg-red-100 font-bold px-3 py-1.5 rounded-lg transition"
+                          data-id="${p.id}"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </div>
+                  `).join('') : `
+                    <div class="text-center py-8 text-gray-500 text-sm">
+                      Nenhum produto cadastrado no momento.
+                    </div>
+                  `}
+                </div>
+              </div>
+
+            </section>
+          </div>
+        </div>
+      `;
+    } catch (error) {
+      console.error('Erro ao renderizar Dashboard:', error);
+      return `<div class="p-8 text-center text-red-600 font-bold">Erro ao carregar o painel administrativo.</div>`;
+    }
+  },
+
+  renderOrderCards(orders, statusKey) {
+    if (!orders || orders.length === 0) {
+      return `<div class="text-xs text-gray-400 italic text-center py-4">Nenhum pedido aqui</div>`;
+    }
+
+    return orders.map(order => `
+      <div class="border rounded-xl p-3 bg-gray-50 space-y-2">
+        <div class="flex justify-between items-start">
+          <div>
+            <span class="font-bold text-gray-900 text-xs">#${order.id.slice(0, 8)}</span>
+            <p class="font-semibold text-gray-800 text-sm">${order.customer_name}</p>
+            <p class="text-[11px] text-gray-500">${order.customer_phone}</p>
+          </div>
+          <span class="font-extrabold text-xs text-gray-900">R$ ${order.total.toFixed(2)}</span>
+        </div>
+
+        <div class="text-[11px] text-gray-600 bg-white p-2 rounded border">
+          <ul class="space-y-0.5">
+            ${order.items?.map(i => `<li>• ${i.quantity}x ${i.title}</li>`).join('') || ''}
+          </ul>
+        </div>
+
+        <div class="flex gap-2 pt-1">
+          ${statusKey === 'pending' ? `
+            <button class="update-order-btn w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1.5 rounded transition" data-id="${order.id}" data-status="preparing">
+              Mover para Preparo
+            </button>
+          ` : statusKey === 'preparing' ? `
+            <button class="update-order-btn w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 rounded transition" data-id="${order.id}" data-status="shipped">
+              Mover para Saiu p/ Entrega
+            </button>
+          ` : `
+            <span class="w-full text-center text-[10px] font-bold text-emerald-600 bg-emerald-50 py-1 rounded">✓ Concluído</span>
+          `}
+        </div>
+      </div>
+    `).join('');
+  },
+
+  bindEvents(container, refreshCallback) {
+    if (!container) return;
+
+    // TENANT FORM
+    const tenantForm = container.querySelector('#tenant-form');
     if (tenantForm) {
-      tenantForm.onsubmit = async (e) => {
+      tenantForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const updatedName = container.querySelector('#conf-name').value;
-        const updatedPhone = container.querySelector('#conf-phone').value;
-        const updatedLogo = container.querySelector('#conf-logo').value;
-        const updatedHeroTitle = container.querySelector('#conf-hero-title').value;
-        const updatedHeroSubtitle = container.querySelector('#conf-hero-subtitle').value;
-        const updatedHeroImage = container.querySelector('#conf-hero-image').value;
-        const primaryColor = container.querySelector('#conf-primary').value;
-        const secondaryColor = container.querySelector('#conf-secondary').value;
-        const updatedInstagram = container.querySelector('#conf-instagram').value;
-        const updatedFacebook = container.querySelector('#conf-facebook').value;
+        const store_name = container.querySelector('#tenant-name').value;
+        const phone = container.querySelector('#tenant-phone').value;
+        const is_open = container.querySelector('#tenant-status').value === 'open';
 
-        // NOVO: Captura o valor digitado no input de endereço
-        const updatedAddress = container.querySelector('#conf-address').value;
-
-        const { data: currentTenant } = await supabase.from('tenant_settings').select('id').maybeSingle();
-
-        const { error } = await supabase
-          .from('tenant_settings')
-          .update({
-            store_name: updatedName,
-            whatsapp_number: updatedPhone,
-            logo_url: updatedLogo,
-            hero_title: updatedHeroTitle,
-            hero_subtitle: updatedHeroSubtitle,
-            hero_image_url: updatedHeroImage, // <-- Adicione esta linha
-            primary_color: primaryColor,
-            secondary_color: secondaryColor,
-            instagram_url: updatedInstagram,
-            facebook_url: updatedFacebook,
-            address: updatedAddress // INCLUÍDO COM SUCESSO NO UPDATE
-          })
-          .eq('id', currentTenant.id);
-
-        if (!error) {
-          injectTheme(primaryColor, secondaryColor);
-          alert('Configurações salvas com sucesso!');
-          onRefresh();
-        } else {
-          alert('Erro ao salvar configurações: ' + error.message);
-        }
-      };
+        await api.tenant.update({ store_name, phone, is_open });
+        alert('Configurações atualizadas com sucesso!');
+        if (refreshCallback) refreshCallback();
+      });
     }
 
-    // 2. Cadastro de categoria com geração inteligente de Slug
-    if (categoryForm) {
-      categoryForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const name = container.querySelector('#cat-name').value;
+    // ORDER STATUS UPDATE
+    const orderBtns = container.querySelectorAll('.update-order-btn');
+    orderBtns.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        const status = btn.getAttribute('data-status');
+        await api.orders.updateStatus(id, status);
+        if (refreshCallback) refreshCallback();
+      });
+    });
 
-        const slug = name
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9 -]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/-+/g, '-');
-
-        const { error } = await supabase
-          .from('categories')
-          .insert({ name, slug });
-
-        if (!error) {
-          alert('Nova categoria criada!');
-          categoryForm.reset();
-          onRefresh();
-        } else {
-          alert('Erro ao criar categoria: ' + error.message);
-        }
-      };
-    }
-
-    // 3. Remoção de Categoria com validação segura
-    container.querySelectorAll('.js-delete-category').forEach(button => {
-      button.onclick = async () => {
-        const categoryId = button.getAttribute('data-category-id');
-        const confirmDelete = confirm("Excluir esta categoria? Produtos associados a ela ficarão sem categoria.");
-
-        if (confirmDelete) {
-          const { error } = await supabase
-            .from('categories')
-            .delete()
-            .eq('id', categoryId);
-
-          if (!error) {
-            alert('Categoria removida com sucesso!');
-            onRefresh();
+    // CATEGORY DROPDOWN - CRIAR NOVA
+    const catSelect = container.querySelector('#prod-category');
+    if (catSelect) {
+      catSelect.addEventListener('change', async () => {
+        if (catSelect.value === 'new') {
+          const newName = prompt('Digite o nome da nova categoria:');
+          if (newName) {
+            const newCat = await api.categories.create({ name: newName });
+            if (newCat?.data) {
+              if (refreshCallback) refreshCallback();
+            }
           } else {
-            alert('Não foi possível excluir. Verifique se existem produtos dependendo exclusivamente desta categoria.');
-            console.error(error.message);
+            catSelect.value = '';
           }
         }
-      };
-    });
-
-    // 4. Ouvinte para inclusão de novos produtos (captura o frete individual corretamente)
-    if (productForm) {
-      productForm.onsubmit = async (e) => {
-        e.preventDefault();
-        const title = container.querySelector('#prod-title').value;
-        const categoryId = container.querySelector('#prod-category').value;
-        const price = parseFloat(container.querySelector('#prod-price').value);
-        const promoInput = container.querySelector('#prod-promo').value;
-        const imageUrl = container.querySelector('#prod-image').value;
-        const shippingInput = container.querySelector('#prod-shipping').value;
-        const shippingFee = shippingInput ? parseFloat(shippingInput) : 0.00;
-
-        const promoPrice = promoInput ? parseFloat(promoInput) : null;
-        // Novos campos capturados
-        const description = container.querySelector('#prod-description').value;
-        const attributesRaw = container.querySelector('#prod-attributes').value;
-        // Transforma "P, M, G" em um array ["P", "M", "G"]
-        const attributesArray = attributesRaw ? attributesRaw.split(',').map(item => item.trim()) : [];
-        const colorsRaw = container.querySelector('#prod-colors').value;
-        const colorsArray = colorsRaw ? colorsRaw.split(',').map(item => item.trim()) : [];
-
-        const { error } = await supabase.from('products').insert({
-          title: container.querySelector('#prod-title').value,
-          category_id: container.querySelector('#prod-category').value,
-          price: parseFloat(container.querySelector('#prod-price').value),
-          promo_price: parseFloat(container.querySelector('#prod-promo').value) || null,
-          image_url: container.querySelector('#prod-image').value,
-          shipping_fee: parseFloat(container.querySelector('#prod-shipping').value) || 0,
-          description: description,        // Novo campo
-          attributes: attributesArray,     // Novo campo (JSON/Array no Supabase)
-          colors: colorsArray // <-- Adicione esta linha
-        });
-
-        if (!error) {
-          alert('Produto adicionado ao catálogo!');
-          productForm.reset();
-          onRefresh();
-        } else {
-          alert('Erro ao cadastrar produto: ' + error.message);
-        }
-      };
+      });
     }
 
-    // 5. Troca de Status de Pedidos
-    container.querySelectorAll('.js-status-changer').forEach(select => {
-      select.onchange = async () => {
-        const orderId = select.getAttribute('data-order-id');
-        const newStatus = select.value;
-        await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
-      };
+    // EDIT PRODUCT POPULATE FORM
+    const editBtns = container.querySelectorAll('.edit-prod-btn');
+    editBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const product = JSON.parse(btn.getAttribute('data-product'));
+        container.querySelector('#prod-id').value = product.id;
+        container.querySelector('#prod-title').value = product.title;
+        container.querySelector('#prod-price').value = product.price;
+        container.querySelector('#prod-promo-price').value = product.promo_price || '';
+        container.querySelector('#prod-category').value = product.category_id || '';
+        container.querySelector('#prod-stock').value = product.stock || 0;
+        container.querySelector('#prod-image').value = product.image_url || '';
+        container.querySelector('#prod-desc').value = product.description || '';
+        container.querySelector('#prod-featured').checked = !!product.is_featured;
+        container.querySelector('#prod-active').checked = !!product.is_active;
+
+        container.querySelector('#form-title').innerText = '✏️ Editar Produto';
+        container.querySelector('#submit-prod-btn').innerText = 'Salvar Alterações';
+        container.querySelector('#cancel-edit-btn').classList.remove('hidden');
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
     });
 
-    // 6. Remoção de produtos do catálogo
-    container.querySelectorAll('.js-delete-product').forEach(button => {
-      button.onclick = async () => {
-        const productId = button.getAttribute('data-product-id');
-        if (confirm("Deseja remover este produto do catálogo?")) {
-          const { error } = await supabase.from('products').delete().eq('id', productId);
-          if (!error) { alert('Produto removido!'); onRefresh(); }
+    // CANCEL EDIT
+    const cancelBtn = container.querySelector('#cancel-edit-btn');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        container.querySelector('#product-form').reset();
+        container.querySelector('#prod-id').value = '';
+        container.querySelector('#form-title').innerText = '➕ Cadastrar Produto';
+        container.querySelector('#submit-prod-btn').innerText = 'Salvar Produto';
+        cancelBtn.classList.add('hidden');
+      });
+    }
+
+    // PRODUCT FORM SUBMIT (CREATE OR UPDATE)
+    const prodForm = container.querySelector('#product-form');
+    if (prodForm) {
+      prodForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = container.querySelector('#prod-id').value;
+        const price = parseFloat(container.querySelector('#prod-price').value);
+
+        if (price <= 0) {
+          alert('O preço do produto deve ser maior que zero!');
+          return;
         }
-      };
+
+        const productData = {
+          title: container.querySelector('#prod-title').value,
+          price,
+          promo_price: container.querySelector('#prod-promo-price').value ? parseFloat(container.querySelector('#prod-promo-price').value) : null,
+          category_id: container.querySelector('#prod-category').value,
+          stock: parseInt(container.querySelector('#prod-stock').value) || 0,
+          image_url: container.querySelector('#prod-image').value,
+          description: container.querySelector('#prod-desc').value,
+          is_featured: container.querySelector('#prod-featured').checked,
+          is_active: container.querySelector('#prod-active').checked,
+          in_stock: parseInt(container.querySelector('#prod-stock').value) > 0
+        };
+
+        if (id) {
+          await api.products.update(id, productData);
+          alert('Produto atualizado com sucesso!');
+        } else {
+          await api.products.create(productData);
+          alert('Produto cadastrado com sucesso!');
+        }
+
+        if (refreshCallback) refreshCallback();
+      });
+    }
+
+    // DELETE PRODUCT
+    const deleteBtns = container.querySelectorAll('.delete-prod-btn');
+    deleteBtns.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.getAttribute('data-id');
+        if (confirm('Tem certeza que deseja excluir este produto?')) {
+          await api.products.delete(id);
+          alert('Produto excluído com sucesso!');
+          if (refreshCallback) refreshCallback();
+        }
+      });
     });
   }
 };
