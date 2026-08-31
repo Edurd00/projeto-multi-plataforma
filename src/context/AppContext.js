@@ -1,4 +1,5 @@
 import { api } from '../services/api.js';
+import { Toast } from '../components/common/Toast.js';
 
 class AppContext {
   constructor() {
@@ -59,6 +60,7 @@ class AppContext {
 
     if (existingIndex > -1) {
       cart[existingIndex].quantity += quantity;
+      Toast.show('Quantidade do item atualizada.', 'info');
     } else {
       cart.push({
         ...product,
@@ -66,6 +68,7 @@ class AppContext {
         selectedOptions,
         itemKey
       });
+      Toast.show('Item adicionado ao carrinho com sucesso!', 'success');
     }
 
     this.state.cart = cart;
@@ -76,6 +79,7 @@ class AppContext {
   removeFromCart(itemKey) {
     this.state.cart = this.state.cart.filter(item => item.itemKey !== itemKey);
     localStorage.setItem('cart', JSON.stringify(this.state.cart));
+    Toast.show('Item removido do carrinho.', 'info');
     this.notify();
   }
 
@@ -88,8 +92,16 @@ class AppContext {
       return item;
     }).filter(Boolean);
 
+    const isRemoved = cart.length < this.state.cart.length;
     this.state.cart = cart;
     localStorage.setItem('cart', JSON.stringify(cart));
+
+    if (isRemoved) {
+      Toast.show('Item removido do carrinho.', 'info');
+    } else {
+      Toast.show('Quantidade do item atualizada.', 'info');
+    }
+
     this.notify();
   }
 

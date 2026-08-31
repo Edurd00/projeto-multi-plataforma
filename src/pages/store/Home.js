@@ -1,4 +1,5 @@
 import { api } from '../../services/api.js';
+import { Toast } from '../../components/common/Toast.js';
 
 export const Home = {
   renderSkeleton() {
@@ -202,6 +203,8 @@ export const Home = {
       if (countSlot) {
         countSlot.innerText = `${products?.length || 0} produtos encontrados`;
       }
+
+      Toast.show('Filtro aplicado.', 'info');
     };
 
     // Filtro de Categorias

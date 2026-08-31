@@ -3,6 +3,7 @@ import { appContext } from './context/AppContext.js';
 import { Home } from './pages/store/Home.js';
 import { CartDrawer } from './components/cart/CartDrawer.js';
 import { CheckoutModal } from './components/cart/CheckoutModal.js';
+import { QuickAdminModal } from './components/admin/QuickAdminModal.js';
 import { orderService } from './services/orderService.js';
 import { Dashboard } from './pages/admin/Dashboard.js';
 import { Login } from './pages/auth/Login.js';
@@ -75,7 +76,7 @@ async function mountApp() {
   // ROTA: VITRINE DO CLIENTE (com injeção opcional da Logo no Header)
   const hasLogo = tenantData?.logo_url;
   const brandHeaderHTML = hasLogo
-    ? `<img src="${tenantData.logo_url}" class="h-10 md:h-12 max-w-[200px] object-contain object-left id="store-logo-slot" alt="${tenantData.store_name}" />`
+    ? `<img src="${tenantData.logo_url}" class="h-10 md:h-12 max-w-[200px] object-contain object-left" id="store-logo-slot" alt="${tenantData.store_name}" />`
     : `<span id="store-title-slot" class="text-xl font-black text-gray-900 tracking-tight uppercase">${tenantData?.store_name || 'VITRINE'}</span>`;
 
   appDiv.innerHTML = `
@@ -85,9 +86,9 @@ async function mountApp() {
           ${brandHeaderHTML}
         </div>
         <div class="flex items-center gap-3">
-          <a href="?page=admin" class="text-xs font-bold text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-3 py-2 rounded-lg transition hidden sm:inline-block">
+          <button id="quick-admin-trigger" class="text-xs font-bold text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-400 px-3 py-2 rounded-lg transition hidden sm:inline-block">
             ⚙️ Painel Demo
-          </a>
+          </button>
           <button id="floating-cart-trigger" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -122,6 +123,11 @@ async function mountApp() {
     });
   }
 
+  async function refreshHome() {
+    homeContainer.innerHTML = await Home.render();
+    Home.bindEvents(homeContainer);
+  }
+
   homeContainer.innerHTML = await Home.render();
   Home.bindEvents(homeContainer);
 
@@ -139,6 +145,11 @@ async function mountApp() {
       CartDrawer.open();
     }
   });
+
+  const quickAdminTrigger = document.getElementById('quick-admin-trigger');
+  if (quickAdminTrigger) {
+    quickAdminTrigger.onclick = () => QuickAdminModal.open(() => refreshHome());
+  }
   
   document.getElementById('floating-cart-trigger').onclick = () => CartDrawer.open();
   appContext.subscribe(() => updateUI());
